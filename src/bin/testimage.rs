@@ -45,7 +45,7 @@ fn main() {
         horizontal_evolving.push(horizontal_line(9, start_col..(start_col + 5)));
     }
 
-    println!("horizontal_evolving:\n");
+    println!("short horizontal bar that moves from left to right:\n");
     for factor in horizontal_evolving {
         println!("{:?}", factor);
     }
@@ -55,7 +55,7 @@ fn main() {
         vertical_evolving.push(vertical_line(start_row..(start_row + 5), 0));
     }
 
-    println!("vertical_evolving:\n");
+    println!("short vertical bar that moves from bottom to top:\n");
     for factor in vertical_evolving {
         println!("{:?}", factor);
     }
