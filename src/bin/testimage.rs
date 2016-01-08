@@ -9,6 +9,9 @@ use nalgebra::{DMat};
 extern crate image;
 use image::{ImageBuffer, Luma, DynamicImage};
 
+extern crate rand;
+use rand::{StdRng, Rng, SeedableRng, Closed01};
+
 type FloatType = f64;
 type Mat = DMat<FloatType>;
 
@@ -94,5 +97,13 @@ fn main() {
     for (i, factor) in vertical_evolving.iter().enumerate() {
         save_as_png(&factor, &format!("vertical-{}.png", i)[..]).unwrap();
         println!("{:?}", factor);
+    }
+
+    let seed: &[_] = &[1, 2, 3, 4];
+    let mut rng: StdRng = SeedableRng::from_seed(seed);
+
+    for _ in 0..10 {
+        let Closed01(val) = rng.gen::<Closed01<f64>>();
+        println!("{}", val);
     }
 }
