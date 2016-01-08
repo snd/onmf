@@ -1,7 +1,13 @@
-use std::ops::IndexMut;
+use std::ops::{Index, IndexMut};
+
+#[macro_use]
+extern crate quick_error;
 
 extern crate nalgebra;
 use nalgebra::{DMat};
+
+extern crate image;
+use image::{ImageBuffer, Luma, DynamicImage};
 
 type FloatType = f64;
 type Mat = DMat<FloatType>;
@@ -22,6 +28,33 @@ fn vertical_line<I: Iterator<Item = usize>>(rows: I, col: usize) -> Mat {
     factor
 }
 
+fn mat_to_image(mat: &Mat) -> DynamicImage {
+    let mut image_buffer
+        = ImageBuffer::new(mat.ncols() as u32, mat.nrows() as u32);
+    for (x, y, pixel) in image_buffer.enumerate_pixels_mut() {
+        let value = mat.index((y as usize, x as usize));
+        let byte = (*value * 255.).round() as u8;
+        *pixel = Luma([byte]);
+    }
+    DynamicImage::ImageLuma8(image_buffer)
+}
+
+quick_error! {
+    #[derive(Debug)]
+    pub enum ImageSaveError {
+        Io(err: std::io::Error) {}
+        Image(err: image::ImageError) {}
+    }
+}
+
+fn save_as_png(mat: &Mat, filename: &str) -> Result<(), ImageSaveError> {
+    let image = mat_to_image(&mat);
+    let path = std::path::Path::new(filename);
+    let mut file = try!(std::fs::File::create(&path)
+                        .map_err(ImageSaveError::Io));
+    image.save(&mut file, image::PNG).map_err(ImageSaveError::Image)
+}
+
 fn main() {
     let mut factors: Vec<Mat> = Vec::new();
 
@@ -36,7 +69,8 @@ fn main() {
     }
 
     println!("factors:\n");
-    for factor in factors {
+    for (i, factor) in factors.iter().enumerate() {
+        save_as_png(&factor, &format!("factor-{}.png", i)[..]).unwrap();
         println!("{:?}", factor);
     }
 
