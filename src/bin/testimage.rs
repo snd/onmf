@@ -1,10 +1,10 @@
-use std::ops::{Index, IndexMut, Mul, Add};
+use std::ops::{Index, IndexMut, Mul, Add, Div};
 
 #[macro_use]
 extern crate quick_error;
 
 extern crate nalgebra;
-use nalgebra::{DMat};
+use nalgebra::{DMat, DVec};
 
 extern crate image;
 use image::{ImageBuffer, Luma, DynamicImage};
@@ -73,13 +73,17 @@ fn linear_combination(factors: &[Mat], coefficients: &[FloatType]) -> Mat {
     result
 }
 
-fn random_linear_combination<R: Rng>(factors: &[Mat], rng: &mut R) -> Mat {
-    let mut coefficients: Vec<f64> = Vec::new();
-    for _ in 0..factors.len() {
-        let Closed01(random) = rng.gen::<Closed01<f64>>();
-        coefficients.push(random / 2.);
+fn random_coefficient<R: Rng>(rng: &mut R) -> FloatType {
+    let Closed01(random) = rng.gen::<Closed01<FloatType>>();
+    random
+}
+
+fn random_coefficients<R: Rng>(rng: &mut R, count: usize) -> DVec<FloatType> {
+    let mut coefficients: DVec<FloatType> = DVec::new_zeros(count);
+    for i in 0..count {
+        coefficients[i] = random_coefficient(rng);
     }
-    linear_combination(factors, &coefficients[..])
+    coefficients
 }
 
 fn main() {
@@ -126,8 +130,29 @@ fn main() {
     let seed: &[_] = &[1, 2, 3, 4];
     let mut rng: StdRng = SeedableRng::from_seed(seed);
 
-    for i in 0..10 {
-        let combination = random_linear_combination(&factors[..], &mut rng);
-        save_as_png(&combination, &format!("combination-{}.png", i)[..]).unwrap();
+    // for i in 0..10 {
+    //     let combination = random_linear_combination(&factors[..], &mut rng);
+    //     save_as_png(&combination, &format!("combination-{}.png", i)[..]).unwrap();
+    // }
+
+    let mut iter = horizontal_evolving.iter()
+        .zip(vertical_evolving.iter()).enumerate();
+    for (step, (horizontal, vertical)) in iter {
+        for i in 0..10 {
+            // static factors
+            let random_coefficients = random_coefficients(&mut rng, factors.len()).div(4.);
+            let result = linear_combination(&factors[..], random_coefficients.as_slice());
+
+            // evolving factors
+            let horizontal_coefficient = random_coefficient(&mut rng) / 4.;
+            let result = result.add(
+                horizontal.clone().mul(horizontal_coefficient));
+
+            let vertical_coefficient = random_coefficient(&mut rng) / 4.;
+            let result = result.add(
+                vertical.clone().mul(vertical_coefficient));
+
+            save_as_png(&result, &format!("test-{}-{}.png", step, i)[..]).unwrap();
+        }
     }
 }
