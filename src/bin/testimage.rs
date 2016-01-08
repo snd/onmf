@@ -73,6 +73,15 @@ fn linear_combination(factors: &[Mat], coefficients: &[FloatType]) -> Mat {
     result
 }
 
+fn random_linear_combination<R: Rng>(factors: &[Mat], rng: &mut R) -> Mat {
+    let mut coefficients: Vec<f64> = Vec::new();
+    for _ in 0..factors.len() {
+        let Closed01(random) = rng.gen::<Closed01<f64>>();
+        coefficients.push(random / 2.);
+    }
+    linear_combination(factors, &coefficients[..])
+}
+
 fn main() {
     let mut factors: Vec<Mat> = Vec::new();
 
@@ -117,35 +126,8 @@ fn main() {
     let seed: &[_] = &[1, 2, 3, 4];
     let mut rng: StdRng = SeedableRng::from_seed(seed);
 
-    for _ in 0..10 {
-        let Closed01(val) = rng.gen::<Closed01<f64>>();
-        println!("{}", val);
+    for i in 0..10 {
+        let combination = random_linear_combination(&factors[..], &mut rng);
+        save_as_png(&combination, &format!("combination-{}.png", i)[..]).unwrap();
     }
-
-    let coefficients: Vec<FloatType> = vec![
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.5,
-        0.0,
-        0.0,
-        0.0,
-        0.5,
-        0.5,
-        0.5,
-        0.0,
-        0.0,
-    ];
-    let combination = linear_combination(&factors[..], &coefficients[..]);
-    save_as_png(&combination, "combination.png").unwrap();
-
-    // save_as_png(&factors[0].clone().add(factors[1].clone().mul(0.5)), "combination.png").unwrap();
 }
