@@ -1,0 +1,14 @@
+[package]
+authors = ["Maximilian Krüger <kruemaxi@gmail.com>"]
+description = "nothing to see here. move along."
+documentation = "https://snd.github.io/onmf/onmf/index.html"
+homepage = "https://github.com/snd/onmf"
+keywords = []
+license = "MIT"
+name = "onmf"
+readme = "README.md"
+repository = "https://github.com/snd/onmf.git"
+version = "0.1.0"
+
+[dependencies]
+nalgebra = "0.4.0"
