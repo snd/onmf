@@ -49,4 +49,14 @@ fn main() {
     for factor in horizontal_evolving {
         println!("{:?}", factor);
     }
+
+    let mut vertical_evolving: Vec<Mat> = Vec::new();
+    for start_row in (0..6).rev() {
+        vertical_evolving.push(vertical_line(start_row..(start_row + 5), 0));
+    }
+
+    println!("vertical_evolving:\n");
+    for factor in vertical_evolving {
+        println!("{:?}", factor);
+    }
 }
