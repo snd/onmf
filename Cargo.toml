@@ -11,4 +11,7 @@ repository = "https://github.com/snd/onmf.git"
 version = "0.1.0"
 
 [dependencies]
+image = "0.6.1"
 nalgebra = "0.4.0"
+quick-error = "0.2.1"
+rand = "0.3.12"
