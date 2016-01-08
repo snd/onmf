@@ -1,4 +1,4 @@
-use std::ops::{Index, IndexMut};
+use std::ops::{Index, IndexMut, Mul, Add};
 
 #[macro_use]
 extern crate quick_error;
@@ -58,6 +58,21 @@ fn save_as_png(mat: &Mat, filename: &str) -> Result<(), ImageSaveError> {
     image.save(&mut file, image::PNG).map_err(ImageSaveError::Image)
 }
 
+fn linear_combination(factors: &[Mat], coefficients: &[FloatType]) -> Mat {
+    assert!(0 < factors.len());
+    assert_eq!(factors.len(), coefficients.len());
+    let nrows = factors[0].nrows();
+    let ncols = factors[0].ncols();
+    let mut result = DMat::new_zeros(nrows, ncols);
+    for (factor, coefficient) in factors.iter().zip(coefficients.iter()) {
+        assert_eq!(factor.nrows(), nrows);
+        assert_eq!(factor.ncols(), ncols);
+        result = result.add(factor.clone().mul(coefficient.clone()));
+    }
+    // result.div(factors.len() as FloatType)
+    result
+}
+
 fn main() {
     let mut factors: Vec<Mat> = Vec::new();
 
@@ -106,4 +121,31 @@ fn main() {
         let Closed01(val) = rng.gen::<Closed01<f64>>();
         println!("{}", val);
     }
+
+    let coefficients: Vec<FloatType> = vec![
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.5,
+        0.0,
+        0.0,
+        0.0,
+        0.5,
+        0.5,
+        0.5,
+        0.0,
+        0.0,
+    ];
+    let combination = linear_combination(&factors[..], &coefficients[..]);
+    save_as_png(&combination, "combination.png").unwrap();
+
+    // save_as_png(&factors[0].clone().add(factors[1].clone().mul(0.5)), "combination.png").unwrap();
 }
