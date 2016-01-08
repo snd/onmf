@@ -80,7 +80,8 @@ fn main() {
     }
 
     println!("short horizontal bar that moves from left to right:\n");
-    for factor in horizontal_evolving {
+    for (i, factor) in horizontal_evolving.iter().enumerate() {
+        save_as_png(&factor, &format!("horizontal-{}.png", i)[..]).unwrap();
         println!("{:?}", factor);
     }
 
@@ -90,7 +91,8 @@ fn main() {
     }
 
     println!("short vertical bar that moves from bottom to top:\n");
-    for factor in vertical_evolving {
+    for (i, factor) in vertical_evolving.iter().enumerate() {
+        save_as_png(&factor, &format!("vertical-{}.png", i)[..]).unwrap();
         println!("{:?}", factor);
     }
 }
