@@ -21,5 +21,3 @@ and not as a 2D array.
 
 
 the reconstructed factors evolve. what does that mean ?
-
-
