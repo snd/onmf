@@ -135,7 +135,7 @@ fn main() {
     //     save_as_png(&combination, &format!("combination-{}.png", i)[..]).unwrap();
     // }
 
-    let mut iter = horizontal_evolving.iter()
+    let iter = horizontal_evolving.iter()
         .zip(vertical_evolving.iter()).enumerate();
     for (step, (horizontal, vertical)) in iter {
         for i in 0..10 {
