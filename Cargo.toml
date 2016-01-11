@@ -13,5 +13,6 @@ version = "0.1.0"
 [dependencies]
 image = "0.6.1"
 nalgebra = "0.4.0"
+num = "0.1.30"
 quick-error = "0.2.1"
 rand = "0.3.12"
