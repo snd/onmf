@@ -1,6 +1,6 @@
 /// generates images used to test NMF
 
-use std::ops::{Index, IndexMut, Mul, Add};
+use std::ops::{Index, IndexMut, Mul, Add, Div};
 
 use std;
 
@@ -18,6 +18,8 @@ use nalgebra::{DMat, DVec, Norm, BaseFloat};
 extern crate image;
 use self::image::{ImageBuffer, Luma, DynamicImage};
 
+use partialmax::PartialMaxIteratorExt;
+
 quick_error! {
     #[derive(Debug)]
     pub enum ImageSaveError {
@@ -28,13 +30,18 @@ quick_error! {
     }
 }
 
+// TODO suffix ReturnT
 pub type Horizontal<T> = Map<Range<usize>, fn(usize) -> T>;
 pub type Vertical<T> = Map<Rev<Range<usize>>, fn(usize) -> T>;
 pub type Static<T> = Chain<Chain<Chain<Once<T>, Vertical<T>>, Once<T>>, Horizontal<T>>;
 pub type Test<T> = Map<Zip<Horizontal<T>, Vertical<T>>, fn((T, T)) -> T>;
 
 // TODO move the type constraints back up here
-pub trait Testimage {
+// TODO split into multiple traits
+// normalize
+// images
+// creation
+pub trait Testimage<T> {
     type Item;
 
     /// returns a testimage that has `1` in `row` for all `cols` and `0` everywhere else
@@ -60,17 +67,23 @@ pub trait Testimage {
     fn static_factors() -> Static<Self>
         where Self: Sized,
               Self::Item: Clone + Copy + Zero + One;
+    // TODO it's probably a much better idea to just use plain functions here
     fn horizontal_evolving_factors() -> Horizontal<Self> where Self::Item: Clone + Copy + Zero + One;
     fn vertical_evolving_factors() -> Vertical<Self> where Self::Item: Clone + Copy + Zero + One;
+    // TODO trait
     fn linear_combination<C>(factors: &[Self], coefficients: &[C]) -> Self
         where C: Clone,
               Self: Sized + Mul<C, Output = Self>,
               Self::Item: Clone + Copy + Zero;
-    fn normalize(&self) -> Self where Self::Item: Clone + BaseFloat;
+    fn normalize_mut(self) -> Self
+        where Self::Item: Clone + Copy + BaseFloat,
+              Self: Div<T, Output = Self>,
+              Self: Sized;
     fn testimages() -> Test<Self> where Self::Item: Clone + Copy + Zero + One + BaseFloat;
 }
 
-impl<T> Testimage for DMat<T> {
+impl<T> Testimage<T> for DMat<T> {
+    // here's where we associate Self::Item and T
     type Item = T;
 
     fn new_horizontal_line<I: Iterator<Item = usize>>(row: usize, cols: I) -> Self
@@ -168,25 +181,29 @@ impl<T> Testimage for DMat<T> {
         result
     }
 
-    fn normalize(&self) -> Self
-        where Self::Item: Clone + BaseFloat
+    /// divide all values by max value
+    // TODO put this into its own trait
+    fn normalize_mut(self) -> Self
+        where Self::Item: Clone + Copy + PartialOrd,
+              Self: Div<T, Output = Self>,
+              Self: Sized
     {
         let nrows = self.nrows();
         let ncols = self.ncols();
-        let mut vec = DVec::from_slice(nrows * ncols, self.as_vec());
-        vec.normalize_mut();
-        DMat::from_col_vec(nrows, ncols, vec.as_slice())
+        let max = self.as_vec().iter().cloned().partial_max().unwrap();
+        self.div(max)
     }
 
     fn testimages() -> Test<Self>
         where Self::Item: Clone + Copy + Zero + One + BaseFloat
     {
-        fn helper<U, V, W>((a, b): (U, V)) -> W
+        fn helper<U, V, W, X>((a, b): (U, V)) -> W
             where U: Add<V, Output = W>,
-                  W: Testimage,
-                  W::Item: Clone + BaseFloat
+                  W: Testimage<X>,
+                  W::Item: Clone + BaseFloat,
+                  W: Div<X, Output=W>
         {
-            a.add(b).normalize()
+            a.add(b).normalize_mut()
         }
         Testimage::horizontal_evolving_factors()
             .zip(Testimage::vertical_evolving_factors())
