@@ -16,6 +16,7 @@ extern crate nalgebra;
 use nalgebra::{DMat};
 
 pub mod testimage;
+pub mod partialmax;
 
 pub struct OnlineNMF<FloatT> {
     /// maps hidden variables (= rows) to observed variables (= cols).
