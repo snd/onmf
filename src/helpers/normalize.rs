@@ -1,6 +1,6 @@
 use std::ops::Div;
 
-use partialmax::PartialMaxIteratorExt;
+use helpers::PartialMaxIteratorExt;
 
 extern crate nalgebra;
 use self::nalgebra::DMat;

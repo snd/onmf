@@ -12,6 +12,9 @@ pub use self::repeatedly::{Repeatedly, repeatedly};
 mod normalize;
 pub use self::normalize::Normalize;
 
+mod partialmax;
+pub use self::partialmax::PartialMaxIteratorExt;
+
 /// returns a random number between `0.` (inclusive) and `1.` (inclusive)
 pub fn random01<T, R>(rng: &mut R) -> T
     where Closed01<T>: Rand,
