@@ -23,7 +23,7 @@ fn main() {
         factor.save_luma01_to_png(&format!("vertical-{}.png", i)[..]).unwrap();
     }
 
-    let testimages: onmf::testimage::Test<DMat<f64>> = Testimage::testimages();
+    let testimages: onmf::testimage::TestReturnT<DMat<f64>> = Testimage::testimages();
     for (i, factor) in testimages.enumerate() {
         factor.save_luma01_to_png(&format!("test-{}.png", i)[..]).unwrap();
     }

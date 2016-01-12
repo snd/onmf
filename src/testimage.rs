@@ -30,11 +30,10 @@ quick_error! {
     }
 }
 
-// TODO suffix ReturnT
-pub type Horizontal<T> = Map<Range<usize>, fn(usize) -> T>;
-pub type Vertical<T> = Map<Rev<Range<usize>>, fn(usize) -> T>;
-pub type Static<T> = Chain<Chain<Chain<Once<T>, Vertical<T>>, Once<T>>, Horizontal<T>>;
-pub type Test<T> = Map<Zip<Horizontal<T>, Vertical<T>>, fn((T, T)) -> T>;
+pub type HorizontalReturnT<T> = Map<Range<usize>, fn(usize) -> T>;
+pub type VerticalReturnT<T> = Map<Rev<Range<usize>>, fn(usize) -> T>;
+pub type StaticReturnT<T> = Chain<Chain<Chain<Once<T>, VerticalReturnT<T>>, Once<T>>, HorizontalReturnT<T>>;
+pub type TestReturnT<T> = Map<Zip<HorizontalReturnT<T>, VerticalReturnT<T>>, fn((T, T)) -> T>;
 
 // TODO move the type constraints back up here
 // TODO split into multiple traits
@@ -64,12 +63,12 @@ pub trait Testimage<T> {
     /// panics unless all the values in `self` are between
     /// `0` (inclusive) and `1` (inclusive)
     fn save_luma01_to_png(&self, filename: &str) -> Result<(), ImageSaveError> where Self::Item: Zero + One + FromPrimitive + ToPrimitive + PartialOrd + Float;
-    fn static_factors() -> Static<Self>
+    fn static_factors() -> StaticReturnT<Self>
         where Self: Sized,
               Self::Item: Clone + Copy + Zero + One;
     // TODO it's probably a much better idea to just use plain functions here
-    fn horizontal_evolving_factors() -> Horizontal<Self> where Self::Item: Clone + Copy + Zero + One;
-    fn vertical_evolving_factors() -> Vertical<Self> where Self::Item: Clone + Copy + Zero + One;
+    fn horizontal_evolving_factors() -> HorizontalReturnT<Self> where Self::Item: Clone + Copy + Zero + One;
+    fn vertical_evolving_factors() -> VerticalReturnT<Self> where Self::Item: Clone + Copy + Zero + One;
     // TODO trait
     fn linear_combination<C>(factors: &[Self], coefficients: &[C]) -> Self
         where C: Clone,
@@ -79,7 +78,7 @@ pub trait Testimage<T> {
         where Self::Item: Clone + Copy + BaseFloat,
               Self: Div<T, Output = Self>,
               Self: Sized;
-    fn testimages() -> Test<Self> where Self::Item: Clone + Copy + Zero + One + BaseFloat;
+    fn testimages() -> TestReturnT<Self> where Self::Item: Clone + Copy + Zero + One + BaseFloat;
 }
 
 impl<T> Testimage<T> for DMat<T> {
@@ -130,7 +129,7 @@ impl<T> Testimage<T> for DMat<T> {
         image.save(&mut file, image::PNG).map_err(ImageSaveError::Image)
     }
 
-    fn static_factors() -> Static<Self>
+    fn static_factors() -> StaticReturnT<Self>
         where Self::Item: Clone + Copy + Zero + One
     {
         fn helper_horizontal<U: Clone + Copy + Zero + One>(row: usize) -> DMat<U> {
@@ -145,7 +144,7 @@ impl<T> Testimage<T> for DMat<T> {
             .chain((1..10).map(helper_vertical as fn(usize) -> Self))
     }
 
-    fn horizontal_evolving_factors() -> Horizontal<Self>
+    fn horizontal_evolving_factors() -> HorizontalReturnT<Self>
         where Self::Item: Clone + Copy + Zero + One
     {
         fn helper<U: Clone + Copy + Zero + One>(start_col: usize) -> DMat<U> {
@@ -154,7 +153,7 @@ impl<T> Testimage<T> for DMat<T> {
         (0..6).map(helper)
     }
 
-    fn vertical_evolving_factors() -> Vertical<Self>
+    fn vertical_evolving_factors() -> VerticalReturnT<Self>
         where Self::Item: Clone + Copy + Zero + One
     {
         fn helper<U: Clone + Copy + Zero + One>(start_row: usize) -> DMat<U> {
@@ -192,11 +191,11 @@ impl<T> Testimage<T> for DMat<T> {
         self.div(max)
     }
 
-    fn testimages() -> Test<Self>
+    fn testimages() -> TestReturnT<Self>
         where Self::Item: Clone + Copy + Zero + One + BaseFloat
     {
         fn helper<U, V, W, X>((a, b): (U, V)) -> W
-            where U: Add<V, Output = W>,
+            where U: Add<V, Output=W>,
                   W: Testimage<X>,
                   W::Item: Clone + BaseFloat,
                   W: Div<X, Output=W>
