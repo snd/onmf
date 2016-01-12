@@ -11,8 +11,8 @@ pub use self::repeatedly::{Repeatedly, repeatedly};
 mod normalize;
 pub use self::normalize::Normalize;
 
-mod partialmax;
-pub use self::partialmax::PartialMaxIteratorExt;
+mod partial_max;
+pub use self::partial_max::PartialMaxIteratorExt;
 
 mod random;
 pub use self::random::random01;
