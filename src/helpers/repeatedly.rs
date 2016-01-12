@@ -15,7 +15,7 @@ impl<T, F: FnMut() -> T> Iterator for Repeatedly<F> {
 
 
 /// takes a function `f` of no args, presumably with side effects, and
-/// returns an iterator that endlessly calls `f` and yields the return value
+/// returns an iterator that endlessly calls `f` and yields what it returns
 pub fn repeatedly<T, F: FnMut() -> T>(f: F) -> Repeatedly<F> {
     Repeatedly { f: f }
 }
