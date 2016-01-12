@@ -30,17 +30,18 @@ fn test_repeatedly() {
 
     let mut i = 0;
     assert_eq!(vec![1, 2, 3, 4],
-               repeatedly(move || {
+               repeatedly(|| {
                    i += 1;
                    i
                })
                    .take(4)
                    .collect::<Vec<usize>>());
+    assert_eq!(i, 4);
 
     let seed: &[_] = &[1, 2, 3, 4];
     let mut rng: StdRng = SeedableRng::from_seed(seed);
     assert_eq!(vec![0.5162139860908154, 0.13628294371987984, 0.21635575241586105, 0.10006169673911681],
-               repeatedly(move || random01(&mut rng))
+               repeatedly(|| random01(&mut rng))
                    .take(4)
                    .collect::<Vec<f64>>());
 }
