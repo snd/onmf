@@ -9,6 +9,9 @@ use self::rand::{Rng, Closed01, Rand};
 mod repeatedly;
 pub use self::repeatedly::{Repeatedly, repeatedly};
 
+mod normalize;
+pub use self::normalize::Normalize;
+
 /// returns a random number between `0.` (inclusive) and `1.` (inclusive)
 pub fn random01<T, R>(rng: &mut R) -> T
     where Closed01<T>: Rand,
