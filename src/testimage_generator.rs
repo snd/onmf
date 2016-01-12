@@ -15,9 +15,10 @@ pub type TestReturnT<T> = Map<Zip<HorizontalReturnT<T>, VerticalReturnT<T>>, fn(
 /// returns a matrix that has `1` in `row` for all `cols` and `0` everywhere else
 ///
 /// ```
-/// horizontal_line(9, 0..5);
+/// # use onmf::testimage_generator::horizontal_line;
+/// horizontal_line::<f64, _>(9, 0..5);
 /// ```
-fn horizontal_line<T, I>(row: usize, cols: I) -> DMat<T>
+pub fn horizontal_line<T, I>(row: usize, cols: I) -> DMat<T>
     where T: Clone + Copy + Zero + One,
           I: Iterator<Item = usize>
 {
@@ -28,7 +29,7 @@ fn horizontal_line<T, I>(row: usize, cols: I) -> DMat<T>
     factor
 }
 
-fn horizontal_evolving_factors<T>() -> HorizontalReturnT<DMat<T>>
+pub fn horizontal_evolving_factors<T>() -> HorizontalReturnT<DMat<T>>
     where T: Clone + Copy + Zero + One
 {
     fn helper<U: Clone + Copy + Zero + One>(start_col: usize) -> DMat<U> {
@@ -40,9 +41,10 @@ fn horizontal_evolving_factors<T>() -> HorizontalReturnT<DMat<T>>
 /// returns a matrix that has `1` in `col` for all `rows` and `0` everywhere else
 ///
 /// ```
-/// vertical_line(5..10, 0);
+/// # use onmf::testimage_generator::vertical_line;
+/// vertical_line::<f64, _>(5..10, 0);
 /// ```
-fn vertical_line<T, I>(rows: I, col: usize) -> DMat<T>
+pub fn vertical_line<T, I>(rows: I, col: usize) -> DMat<T>
     where T: Clone + Copy + Zero + One,
           I: Iterator<Item = usize>
 {
@@ -53,7 +55,7 @@ fn vertical_line<T, I>(rows: I, col: usize) -> DMat<T>
     factor
 }
 
-fn vertical_evolving_factors<T>() -> VerticalReturnT<DMat<T>>
+pub fn vertical_evolving_factors<T>() -> VerticalReturnT<DMat<T>>
     where T: Clone + Copy + Zero + One
 {
     fn helper<U: Clone + Copy + Zero + One>(start_row: usize) -> DMat<U> {
@@ -62,7 +64,7 @@ fn vertical_evolving_factors<T>() -> VerticalReturnT<DMat<T>>
     (0..6).rev().map(helper)
 }
 
-fn static_factors<T>() -> StaticReturnT<DMat<T>>
+pub fn static_factors<T>() -> StaticReturnT<DMat<T>>
     where T: Clone + Copy + Zero + One
 {
     fn helper_horizontal<U: Clone + Copy + Zero + One>(row: usize) -> DMat<U> {
