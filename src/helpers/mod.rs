@@ -1,6 +1,8 @@
 /*!
 helper functions used by this crate
 whose utility surpasses the boundaries of this crate.
+
+generic things that are also useful in other crates.
 */
 
 extern crate rand;
