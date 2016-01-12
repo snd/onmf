@@ -1,5 +1,7 @@
 # ONMF
 
+*very early work in progress. API in flux.*
+
 nothing to see here. move along.
 
 ## how to test this ?
