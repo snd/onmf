@@ -8,22 +8,26 @@ extern crate rand;
 use rand::{StdRng, Rng, SeedableRng, Closed01};
 
 fn main() {
-    let static_factors: Vec<DMat<f64>> = Testimage::static_factors().collect();
-    for (i, factor) in static_factors.iter().enumerate() {
+    let static_factors: onmf::testimage::StaticReturnT<DMat<f64>> =
+        Testimage::static_factors();
+    for (i, factor) in static_factors.enumerate() {
         factor.save_luma01_to_png(&format!("factor-{}.png", i)[..]).unwrap();
     }
 
-    let horizontal_evolving_factors: Vec<DMat<f64>> = Testimage::horizontal_evolving_factors().collect();
-    for (i, factor) in horizontal_evolving_factors.iter().enumerate() {
+    let horizontal_evolving_factors: onmf::testimage::HorizontalReturnT<DMat<f64>> =
+        Testimage::horizontal_evolving_factors();
+    for (i, factor) in horizontal_evolving_factors.enumerate() {
         factor.save_luma01_to_png(&format!("horizontal-{}.png", i)[..]).unwrap();
     }
 
-    let vertical_evolving_factors: Vec<DMat<f64>> = Testimage::vertical_evolving_factors().collect();
-    for (i, factor) in vertical_evolving_factors.iter().enumerate() {
+    let vertical_evolving_factors: onmf::testimage::VerticalReturnT<DMat<f64>> =
+        Testimage::vertical_evolving_factors();
+    for (i, factor) in vertical_evolving_factors.enumerate() {
         factor.save_luma01_to_png(&format!("vertical-{}.png", i)[..]).unwrap();
     }
 
-    let testimages: onmf::testimage::TestReturnT<DMat<f64>> = Testimage::testimages();
+    let testimages: onmf::testimage::TestReturnT<DMat<f64>> =
+        Testimage::testimages();
     for (i, factor) in testimages.enumerate() {
         factor.save_luma01_to_png(&format!("test-{}.png", i)[..]).unwrap();
     }
