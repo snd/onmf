@@ -188,8 +188,6 @@ impl<T> Testimage<T> for DMat<T> {
               Self: Div<T, Output = Self>,
               Self: Sized
     {
-        let nrows = self.nrows();
-        let ncols = self.ncols();
         let max = self.as_vec().iter().cloned().partial_max().unwrap();
         self.div(max)
     }
