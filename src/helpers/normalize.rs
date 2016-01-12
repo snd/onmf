@@ -31,12 +31,18 @@ impl<T> Normalize for DMat<T>
 
 #[test]
 fn test_normalize_zeros() {
-    let zeros = DMat::<f64>::new_zeros(10, 10);
-    assert_eq!(zeros.clone(), zeros.normalize());
+    let mat = DMat::<f64>::new_zeros(10, 10);
+    assert_eq!(mat.clone(), mat.normalize());
 }
 
 #[test]
 fn test_normalize_ones() {
-    let ones = DMat::<f64>::new_ones(10, 10);
-    assert_eq!(ones.clone(), ones.normalize());
+    let mat = DMat::<f64>::new_ones(10, 10);
+    assert_eq!(mat.clone(), mat.normalize());
+}
+
+#[test]
+fn test_normalize_values() {
+    let mat = DMat::<f64>::from_elem(10, 10, 0.5);
+    assert_eq!(DMat::<f64>::new_ones(10, 10), mat.normalize());
 }
