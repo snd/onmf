@@ -1,3 +1,5 @@
+extern crate rand;
+
 pub struct Repeatedly<F> {
     pub f: F,
 }
@@ -20,6 +22,9 @@ pub fn repeatedly<T, F: FnMut() -> T>(f: F) -> Repeatedly<F> {
 
 #[test]
 fn test_repeatedly() {
+    use self::rand::{StdRng, SeedableRng};
+    use helpers::random01;
+
     assert_eq!(vec![3, 3, 3, 3],
                repeatedly(|| 3).take(4).collect::<Vec<usize>>());
 
@@ -31,4 +36,11 @@ fn test_repeatedly() {
                })
                    .take(4)
                    .collect::<Vec<usize>>());
+
+    let seed: &[_] = &[1, 2, 3, 4];
+    let mut rng: StdRng = SeedableRng::from_seed(seed);
+    assert_eq!(vec![0.5162139860908154, 0.13628294371987984, 0.21635575241586105, 0.10006169673911681],
+               repeatedly(move || random01(&mut rng))
+                   .take(4)
+                   .collect::<Vec<f64>>());
 }
