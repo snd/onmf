@@ -21,12 +21,10 @@ fn main() {
         factor.save_to_png(&format!("vertical-{}.png", i)[..]).unwrap();
     }
 
-    // let seed: &[_] = &[1, 2, 3, 4];
-    // let mut rng: StdRng = SeedableRng::from_seed(seed);
+    let seed: &[_] = &[1, 2, 3, 4];
+    let mut rng: StdRng = SeedableRng::from_seed(seed);
 
-    // let testimages: Box<Iterator<Item=Dmat<f64>>> =
-    //     Testimage::testimages(1, &mut rng);
-    // for (step, i, factor) in testimages.enumerate() {
-    //     factor.save_luma01_to_png(&format!("test-{}-{}.png", step, i)[..]).unwrap();
-    // }
+    for (step, i, factor) in testimage_generator::ImgGen::<_, DMat<f64>, _, _>::new(1, &mut rng) {
+        factor.save_to_png(&format!("test-{}-{}.png", step, i)[..]).unwrap();
+    }
 }
