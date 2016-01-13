@@ -7,10 +7,10 @@ and inspecting `hidden` and `weights`.
 */
 
 extern crate num;
-use self::num::traits::{Zero, One, FromPrimitive, ToPrimitive, Float};
+use self::num::{Zero};
 
 extern crate nalgebra;
-use self::nalgebra::{DMat, DVec, Norm, BaseFloat};
+use self::nalgebra::{DMat};
 
 pub struct OnlineNMF<FloatT> {
     /// maps hidden variables (= rows) to observed variables (= cols).
