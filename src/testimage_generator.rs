@@ -176,3 +176,17 @@ impl<'a, R, T, IH, IV> Iterator for ImgGen<'a, R, DMat<T>, IH, IV>
         Some((self.step, i, result.normalize()))
     }
 }
+
+pub fn magnify<T: Clone>(matrix: DMat<T>, amount: usize) -> DMat<T> {
+    let mut result = unsafe {
+        DMat::<T>::new_uninitialized(
+            matrix.nrows() * amount, matrix.ncols() * amount)
+    };
+    // TODO is this the most efficient loop order ?
+    for row in 0..result.nrows() {
+        for col in 0..result.ncols() {
+            result[(row, col)] = matrix[(row / amount, col / amount)].clone();
+        }
+    }
+    result
+}

@@ -1,21 +1,23 @@
 extern crate onmf;
 use onmf::helpers::{ToImage};
 use onmf::testimage_generator;
+use onmf::testimage_generator::{magnify};
 
 extern crate rand;
 use rand::{StdRng, SeedableRng};
 
 fn main() {
+    let mag_factor = 10;
     for (i, factor) in testimage_generator::static_factors::<f64>().enumerate() {
-        factor.save_to_png(&format!("factor-{}.png", i)[..]).unwrap();
+        magnify(factor, mag_factor).save_to_png(&format!("factor-{}.png", i)[..]).unwrap();
     }
 
     for (i, factor) in testimage_generator::horizontal_evolving_factors::<f64>().enumerate() {
-        factor.save_to_png(&format!("horizontal-{}.png", i)[..]).unwrap();
+        magnify(factor, mag_factor).save_to_png(&format!("horizontal-{}.png", i)[..]).unwrap();
     }
 
     for (i, factor) in testimage_generator::vertical_evolving_factors::<f64>().enumerate() {
-        factor.save_to_png(&format!("vertical-{}.png", i)[..]).unwrap();
+        magnify(factor, mag_factor).save_to_png(&format!("vertical-{}.png", i)[..]).unwrap();
     }
 
     let seed: &[_] = &[1, 2, 3, 4];
@@ -23,6 +25,6 @@ fn main() {
 
     let per_step = 10;
     for (step, i, factor) in testimage_generator::testimages::<f64, _>(per_step, &mut rng) {
-        factor.save_to_png(&format!("test-{}-{}.png", step, i)[..]).unwrap();
+        magnify(factor, mag_factor).save_to_png(&format!("test-{}-{}.png", step, i)[..]).unwrap();
     }
 }
