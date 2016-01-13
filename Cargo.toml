@@ -1,10 +1,10 @@
 [package]
 authors = ["Maximilian Krüger <kruemaxi@gmail.com>"]
-description = "nothing to see here. move along."
+description = ""
 documentation = "https://snd.github.io/onmf/onmf/index.html"
 homepage = "https://github.com/snd/onmf"
-keywords = []
-license = "MIT"
+keywords = ["machine learning"]
+license = "MIT OR Apache-2.0"
 name = "onmf"
 readme = "README.md"
 repository = "https://github.com/snd/onmf.git"
