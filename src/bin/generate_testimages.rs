@@ -24,7 +24,9 @@ fn main() {
     let seed: &[_] = &[1, 2, 3, 4];
     let mut rng: StdRng = SeedableRng::from_seed(seed);
 
-    for (step, i, factor) in testimage_generator::ImgGen::<_, DMat<f64>, _, _>::new(1, &mut rng) {
+    let per_step = 10;
+    // TODO this is not very nice
+    for (step, i, factor) in testimage_generator::ImgGen::<_, DMat<f64>, _, _>::new(per_step, &mut rng) {
         factor.save_to_png(&format!("test-{}-{}.png", step, i)[..]).unwrap();
     }
 }
