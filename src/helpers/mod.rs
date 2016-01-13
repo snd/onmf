@@ -8,7 +8,8 @@ generic things that are also useful in other crates.
 mod repeatedly;
 pub use self::repeatedly::{Repeatedly, repeatedly};
 
-mod normalize;
+// this needs to be public otherwise the impl is not exported
+pub mod normalize;
 pub use self::normalize::Normalize;
 
 mod partial_max;
