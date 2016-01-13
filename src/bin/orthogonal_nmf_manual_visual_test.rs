@@ -45,6 +45,4 @@ fn main() {
         magnify(image, mag_factor).save_to_png(&format!("orthogonal-nmf-hidden-{}.png", irow)[..]).unwrap();
 
     }
-    // for (i, factor) in decomposed_hidden.enumerate() {
-    // }
 }
