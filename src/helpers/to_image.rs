@@ -21,6 +21,7 @@ quick_error! {
     }
 }
 
+/// make images from things containing brightness information
 pub trait ToImage {
     /// # Panics
     /// panics unless all the values in `self` are between
