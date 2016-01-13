@@ -17,3 +17,6 @@ pub use self::partial_max::PartialMaxIteratorExt;
 
 mod random;
 pub use self::random::random01;
+
+pub mod to_image;
+pub use self::to_image::ToImage;
