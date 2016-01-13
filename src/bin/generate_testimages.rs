@@ -2,9 +2,6 @@ extern crate onmf;
 use onmf::helpers::{ToImage};
 use onmf::testimage_generator;
 
-extern crate nalgebra;
-use nalgebra::{DMat};
-
 extern crate rand;
 use rand::{StdRng, SeedableRng};
 
@@ -25,8 +22,7 @@ fn main() {
     let mut rng: StdRng = SeedableRng::from_seed(seed);
 
     let per_step = 10;
-    // TODO this is not very nice
-    for (step, i, factor) in testimage_generator::ImgGen::<_, DMat<f64>, _, _>::new(per_step, &mut rng) {
+    for (step, i, factor) in testimage_generator::testimages::<f64, _>(per_step, &mut rng) {
         factor.save_to_png(&format!("test-{}-{}.png", step, i)[..]).unwrap();
     }
 }

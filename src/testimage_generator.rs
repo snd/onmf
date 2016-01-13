@@ -103,6 +103,28 @@ pub fn static_factors<T>() -> StaticReturnT<DMat<T>>
         .chain((1..10).map(helper_vertical as fn(usize) -> DMat<T>))
 }
 
+pub fn testimages<'a, T, R>(per_step: usize, rng: &'a mut R) -> ImgGen<'a, R, DMat<T>, HorizontalReturnT<DMat<T>>, VerticalReturnT<DMat<T>>>
+    where R: 'a,
+          T: Clone + Copy + Zero + One
+{
+    assert!(0 < per_step);
+    let mut horizontal_iter = horizontal_evolving_factors();
+    let mut vertical_iter = vertical_evolving_factors();
+    let horizontal = horizontal_iter.next().unwrap();
+    let vertical = vertical_iter.next().unwrap();
+    ImgGen {
+        per_step: per_step,
+        step: 0,
+        i: 0,
+        horizontal_iter: horizontal_iter,
+        vertical_iter: vertical_iter,
+        current_horizontal: horizontal,
+        current_vertical: vertical,
+        rng: rng,
+        static_factors: static_factors().collect::<Vec<DMat<T>>>(),
+    }
+}
+
 pub struct ImgGen<'a, R: 'a, T, IH, IV> {
     pub per_step: usize,
     pub step: usize,
@@ -113,31 +135,6 @@ pub struct ImgGen<'a, R: 'a, T, IH, IV> {
     pub current_vertical: T,
     pub static_factors: Vec<T>,
     pub rng: &'a mut R,
-}
-
-impl<'a, R, T> ImgGen<'a, R, DMat<T>, HorizontalReturnT<DMat<T>>, VerticalReturnT<DMat<T>>>
-    where R: 'a,
-          T: Clone + Copy + Zero + One
-{
-    pub fn new(per_step: usize, rng: &'a mut R) -> Self {
-        assert!(0 < per_step);
-        let mut horizontal_iter = horizontal_evolving_factors();
-        let mut vertical_iter = vertical_evolving_factors();
-        let horizontal = horizontal_iter.next().unwrap();
-        let vertical = vertical_iter.next().unwrap();
-        ImgGen {
-            per_step: per_step,
-            step: 0,
-            i: 0,
-            horizontal_iter: horizontal_iter,
-            vertical_iter: vertical_iter,
-            current_horizontal: horizontal,
-            current_vertical: vertical,
-            rng: rng,
-            static_factors: static_factors().collect::<Vec<DMat<T>>>(),
-        }
-
-    }
 }
 
 impl<'a, R, T, IH, IV> Iterator for ImgGen<'a, R, DMat<T>, IH, IV>
