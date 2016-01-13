@@ -13,11 +13,11 @@ extern crate nalgebra;
 use self::nalgebra::{DMat};
 
 pub struct OnlineNMF<FloatT> {
-    /// maps hidden variables (= rows) to observed variables (= cols).
+    /// maps hidden variables (one per row) to observed variables (one per column).
     /// changes on every `update`.
     /// stays constant in size.
     pub hidden: DMat<FloatT>,
-    /// maps times (= rows) to hidden variables (= cols).
+    /// maps times (one per row) to hidden variables (one per column).
     /// changes on every `update`.
     /// inspect this.
     /// will grow in size.
