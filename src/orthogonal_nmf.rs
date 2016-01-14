@@ -1,5 +1,7 @@
 use std::ops::{Mul, Add};
 
+use std::fmt::{Display};
+
 extern crate nalgebra;
 use self::nalgebra::{DMat, Transpose};
 
@@ -16,7 +18,7 @@ pub struct OrthogonalNMF<FloatT> {
     pub iteration: usize,
 }
 
-impl<FloatT: Rand + Float + FromPrimitive + Mul + Zero> OrthogonalNMF<FloatT> {
+impl<FloatT: Rand + Float + FromPrimitive + Mul + Zero + Display> OrthogonalNMF<FloatT> {
     pub fn init_randomly(nhidden: usize, nobserved: usize, nsamples: usize) -> OrthogonalNMF<FloatT> {
         OrthogonalNMF {
             hidden: DMat::new_random(nhidden, nobserved),
@@ -46,9 +48,12 @@ impl<FloatT: Rand + Float + FromPrimitive + Mul + Zero> OrthogonalNMF<FloatT> {
         assert_eq!(nsamples, data.nrows());
         assert_eq!(nobserved, data.ncols());
 
+        // this gets smaller and smaller with each iteration
         let alpha: FloatT =
             FloatT::from_f32(0.1).unwrap() *
             FloatT::from_f32(1.01).unwrap().powi(self.iteration as i32);
+
+        println!("iteration = {} alpha = {}", self.iteration, alpha);
 
         let hidden_transposed = self.hidden.transpose();
         let weights_transposed = self.weights.transpose();
@@ -99,5 +104,7 @@ impl<FloatT: Rand + Float + FromPrimitive + Mul + Zero> OrthogonalNMF<FloatT> {
                     new_hidden_divisor[index];
             }
         }
+
+        self.iteration += 1;
     }
 }
