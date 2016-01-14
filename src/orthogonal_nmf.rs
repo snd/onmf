@@ -17,8 +17,6 @@ pub struct OrthogonalNMF<FloatT> {
 }
 
 impl<FloatT: Rand + Float + FromPrimitive + Mul> OrthogonalNMF<FloatT> {
-    /// one observed per column.
-    /// one time per row.
     pub fn init_randomly(nhidden: usize, nobserved: usize, nsamples: usize) -> OrthogonalNMF<FloatT> {
         OrthogonalNMF {
             hidden: DMat::new_random(nhidden, nobserved),
@@ -27,8 +25,18 @@ impl<FloatT: Rand + Float + FromPrimitive + Mul> OrthogonalNMF<FloatT> {
         }
     }
 
+    pub fn init(hidden: DMat<FloatT>, weights: DMat<FloatT>) -> OrthogonalNMF<FloatT> {
+        OrthogonalNMF {
+            hidden: hidden,
+            weights: weights,
+            iteration: 0,
+        }
+    }
+
     // TODO how many iterations ?
-    /// it gets better and better with each iteration
+    /// it gets better and better with each iteration.
+    /// one observed per column.
+    /// one sample per row.
     pub fn iterate(&mut self, data: &DMat<FloatT>) {
         let nsamples = self.weights.nrows();
         let nobserved = self.hidden.ncols();
