@@ -34,7 +34,7 @@ fn main() {
     let mut nmf = onmf::OrthogonalNMF::<f64>::init_randomly(
         nhidden, nobserved, nsamples);
 
-    for _ in 0..1000 {
+    loop {
         nmf.iterate(&data);
 
         // read testimage out of each row of nmf.hidden
