@@ -19,7 +19,7 @@ fn main() {
     let per_step = 10;
     let nsamples = steps * per_step;
     let nobserved = 10 * 10;
-    let nhidden = 10;
+    let nhidden = 20;
 
     let mut data = DMat::<f64>::new_zeros(nsamples, nobserved);
 
