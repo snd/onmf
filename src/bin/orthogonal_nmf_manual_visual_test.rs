@@ -16,7 +16,7 @@ fn main() {
     let mut rng: StdRng = SeedableRng::from_seed(seed);
 
     let steps = 6;
-    let per_step = 10;
+    let per_step = 1000;
     let nsamples = steps * per_step;
     let nobserved = 10 * 10;
     let nhidden = 20;
