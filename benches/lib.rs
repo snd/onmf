@@ -11,29 +11,25 @@ use rblas::matrix::ops::Gemm;
 use rblas::math::mat::Mat;
 use rblas::attribute::Transpose as BlasTranspose;
 
-#[bench]
-fn bench_samples_mul_hidden_t_nalgebra(bencher: &mut test::Bencher) {
-    let nsamples = 6 * 1000;
-    let nobserved = 10 * 10;
-    let nhidden = 20;
+const NSAMPLES: usize = 6 * 1000;
+const NOBSERVED: usize = 10 * 10;
+const NHIDDEN: usize = 20;
 
+#[bench]
+fn bench_ortho_nmf_weights_dividend_nalgebra(bencher: &mut test::Bencher) {
+    let samples = DMat::<f64>::new_ones(NSAMPLES, NOBSERVED);
+    let hidden = DMat::<f64>::new_ones(NHIDDEN, NOBSERVED);
     bencher.iter(|| {
-        let samples = DMat::<f64>::new_ones(nsamples, nobserved);
-        let hidden = DMat::<f64>::new_ones(nhidden, nobserved);
-        samples.mul(hidden.transpose())
+        samples.clone().mul(hidden.transpose())
     });
 }
 
 #[bench]
-fn bench_samples_mul_hidden_t_blas(bencher: &mut test::Bencher) {
-    let nsamples = 6 * 1000;
-    let nobserved = 10 * 10;
-    let nhidden = 20;
-
+fn bench_ortho_nmf_weights_dividend_rblas(bencher: &mut test::Bencher) {
+    let samples = Mat::<f64>::fill(1., NSAMPLES, NOBSERVED);
+    let hidden = Mat::<f64>::fill(1., NHIDDEN, NOBSERVED);
     bencher.iter(|| {
-        let samples = Mat::<f64>::fill(1., nsamples, nobserved);
-        let hidden = Mat::<f64>::fill(1., nhidden, nobserved);
-        let mut result = Mat::<f64>::fill(1., nsamples, nhidden);
+        let mut result = Mat::<f64>::fill(1., NSAMPLES, NHIDDEN);
         Gemm::gemm(
             &1.,
             BlasTranspose::NoTrans, &samples,
