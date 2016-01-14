@@ -23,7 +23,7 @@ fn main() {
 
     let mut data = DMat::<f64>::new_zeros(nsamples, nobserved);
 
-    // write on testimage into each row of data
+    // write one testimage into each row of data
     for (step, i, factor) in testimage_generator::testimages::<f64, _>(per_step, &mut rng) {
         let row = step * i;
         for (col, val) in factor.as_vec().iter().enumerate() {
@@ -34,18 +34,19 @@ fn main() {
     let mut nmf = onmf::OrthogonalNMF::<f64>::init_randomly(
         nhidden, nobserved, nsamples);
 
-    for _ in 0..200 { nmf.iterate(&data) }
+    for _ in 0..1000 {
+        nmf.iterate(&data);
 
-    // take a snapshot
-    // read testimage out of each row of nmf.hidden
-    for irow in 0..nhidden {
-        let mut column = Vec::<f64>::new();
-        for icol in 0..nobserved {
-            column.push(nmf.hidden[(irow, icol)]);
+        // read testimage out of each row of nmf.hidden
+        for irow in 0..nhidden {
+            let mut column = Vec::<f64>::new();
+            for icol in 0..nobserved {
+                column.push(nmf.hidden[(irow, icol)]);
+            }
+            let image = DMat::<f64>::from_col_vec(10, 10, &column[..]);
+            // println!("image {}", irow);
+            // println!("{:?}", image);
+            magnify(image.normalize(), mag_factor).save_to_png(&format!("orthogonal-nmf-hidden-snapshot-{}.png", irow)[..]).unwrap();
         }
-        let image = DMat::<f64>::from_col_vec(10, 10, &column[..]);
-        // println!("image {}", irow);
-        // println!("{:?}", image);
-        magnify(image.normalize(), mag_factor).save_to_png(&format!("orthogonal-nmf-hidden-snapshot-{}.png", irow)[..]).unwrap();
     }
 }
