@@ -1,5 +1,5 @@
 extern crate onmf;
-use onmf::helpers::{ToImage};
+use onmf::helpers::{ToImage, Normalize};
 use onmf::testimage_generator;
 use onmf::testimage_generator::{magnify};
 
@@ -20,7 +20,7 @@ fn main() {
     let nsamples = steps * per_step;
     let nobserved = 10 * 10;
     let nhidden = 10;
-    let niterations = 100;
+    let niterations = 2;
 
     let mut data = DMat::<f64>::new_zeros(nsamples, nobserved);
 
@@ -44,7 +44,8 @@ fn main() {
             column.push(nmf.hidden[(irow, icol)]);
         }
         let image = DMat::<f64>::from_col_vec(10, 10, &column[..]);
-        magnify(image, mag_factor).save_to_png(&format!("orthogonal-nmf-hidden-{}.png", irow)[..]).unwrap();
+        // println!("{:?}", image);
+        magnify(image.normalize(), mag_factor).save_to_png(&format!("orthogonal-nmf-hidden-{}.png", irow)[..]).unwrap();
 
     }
 }

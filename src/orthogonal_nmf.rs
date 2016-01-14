@@ -1,4 +1,4 @@
-use std::ops::{Mul};
+use std::ops::{Mul, Add};
 
 extern crate nalgebra;
 use self::nalgebra::{DMat, Transpose};
@@ -7,7 +7,7 @@ extern crate rand;
 use self::rand::{Rand};
 
 extern crate num;
-use self::num::{Float, FromPrimitive};
+use self::num::{Float, Zero, FromPrimitive};
 
 pub struct OrthogonalNMF<FloatT> {
     // TODO add docstrings
@@ -16,7 +16,7 @@ pub struct OrthogonalNMF<FloatT> {
     pub iteration: usize,
 }
 
-impl<FloatT: Rand + Float + FromPrimitive + Mul> OrthogonalNMF<FloatT> {
+impl<FloatT: Rand + Float + FromPrimitive + Mul + Zero> OrthogonalNMF<FloatT> {
     pub fn init_randomly(nhidden: usize, nobserved: usize, nsamples: usize) -> OrthogonalNMF<FloatT> {
         OrthogonalNMF {
             hidden: DMat::new_random(nhidden, nobserved),
@@ -40,10 +40,12 @@ impl<FloatT: Rand + Float + FromPrimitive + Mul> OrthogonalNMF<FloatT> {
     /// one observed per column.
     /// one sample per row.
     pub fn iterate(&mut self, data: &DMat<FloatT>) {
-        let nsamples = self.weights.nrows();
+        let nhidden = self.hidden.nrows();
         let nobserved = self.hidden.ncols();
+        let nsamples = self.weights.nrows();
         assert_eq!(nsamples, data.nrows());
         assert_eq!(nobserved, data.ncols());
+
         let alpha: FloatT =
             FloatT::from_f32(0.1).unwrap() *
             FloatT::from_f32(1.01).unwrap().powi(self.iteration as i32);
@@ -52,46 +54,50 @@ impl<FloatT: Rand + Float + FromPrimitive + Mul> OrthogonalNMF<FloatT> {
         let weights_transposed = self.weights.transpose();
 
         let new_weights_dividend = data.clone().mul(&hidden_transposed);
-        let new_weights_divsor = self.weights.clone().mul(&self.hidden).mul(&hidden_transposed);
+        let new_weights_divisor = self.weights.clone().mul(&self.hidden).mul(&hidden_transposed);
 
         let new_hidden_dividend = weights_transposed.clone().mul(data);
 
-        // let size = ?
-        // let gamma = DMat::from_elem(size, size, alpha);
-        // let zeroes = DVec::new_zeros(size);
-        // gamma.set_diag(zeroes);
-        // let latents_bar = weights_transposed
-        //     .mul(self.weights)
-        //     .mul(self.latents)
-        //     // we add the previous latents
-        //     // multiplied by alpha except for the diag which is set to zero
-        //     .add(gamma.mul(self.latents));
+        // gamma is a symetric matrix with diagonal elements equal to zero
+        // and other elements = alpha
+        let gamma_size = nhidden;
+        let mut gamma = DMat::from_elem(gamma_size, gamma_size, alpha);
 
-        // // iterate weights
-        // // TODO correct order ?
-        // for col in 0..self.weights.ncols() {
-        //     for row in 0..self.weights.nrows() {
-        //         let index = (row, col);
-        //         let foo_value = unsafe { weights_foo.unsafe_at(index) }
-        //         // these get larger and larger
-        //         let bar_value = unsafe { weights_bar.unsafe_at(index) }
-        //         let old_value = unsafe { self.weights.unsafe_at(index) }
-        //         let new_value = old_value * foo_value / bar_value;
-        //         unsafe { self.weights.unsafe_set(index, new_value) }
-        //     }
-        // }
-        //
-        // // iterate latents
-        // // TODO correct order ?
-        // for col in 0..self.latents.ncols() {
-        //     for row in 0..self.latents.nrows() {
-        //         let index = (row, col);
-        //         let foo_value = latents_foo[index];
-        //         let bar_value = latents_bar[index]
-        //         let old_value = self.latents[index];
-        //         let new_value = old_value * foo_value / bar_value;
-        //         self.latents[index] = new_value;
-        //     }
-        // }
+        // set diagonal to zero
+        for i in 0..gamma_size {
+            gamma[(i, i)] = FloatT::zero();
+        }
+
+        let new_hidden_divisor = weights_transposed.clone()
+            .mul(&self.weights)
+            .mul(&self.hidden)
+            // we add the previous latents
+            // multiplied by alpha except for the diag which is set to zero
+            .add(gamma.mul(&self.hidden));
+
+        // compute new weights
+        // TODO efficient order ?
+        for col in 0..self.weights.ncols() {
+            for row in 0..self.weights.nrows() {
+                let index = (row, col);
+                self.weights[index] =
+                    self.weights[index] *
+                    new_weights_dividend[index] /
+                    // these get larger and larger
+                    new_weights_divisor[index];
+            }
+        }
+
+        // compute new hidden
+        // TODO efficient order ?
+        for col in 0..self.hidden.ncols() {
+            for row in 0..self.hidden.nrows() {
+                let index = (row, col);
+                self.hidden[index] =
+                    self.hidden[index] *
+                    new_hidden_dividend[index] /
+                    new_hidden_divisor[index];
+            }
+        }
     }
 }
