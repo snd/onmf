@@ -58,9 +58,12 @@ impl<FloatT: Rand + Float + FromPrimitive + Mul + Zero + Display> OrthogonalNMF<
         let hidden_transposed = self.hidden.transpose();
         let weights_transposed = self.weights.transpose();
 
+        // has the same shape as weights
         let new_weights_dividend = data.clone().mul(&hidden_transposed);
+        // has the same shape as weights
         let new_weights_divisor = self.weights.clone().mul(&self.hidden).mul(&hidden_transposed);
 
+        // has the same shape as hidden
         let new_hidden_dividend = weights_transposed.clone().mul(data);
 
         // gamma is a symetric matrix with diagonal elements equal to zero
@@ -73,6 +76,7 @@ impl<FloatT: Rand + Float + FromPrimitive + Mul + Zero + Display> OrthogonalNMF<
             gamma[(i, i)] = FloatT::zero();
         }
 
+        // has the same shape as hidden
         let new_hidden_divisor = weights_transposed.clone()
             .mul(&self.weights)
             .mul(&self.hidden)
@@ -85,6 +89,7 @@ impl<FloatT: Rand + Float + FromPrimitive + Mul + Zero + Display> OrthogonalNMF<
         for col in 0..self.weights.ncols() {
             for row in 0..self.weights.nrows() {
                 let index = (row, col);
+                debug_assert!(FloatT::zero() != new_weights_divisor[index]);
                 self.weights[index] =
                     self.weights[index] *
                     new_weights_dividend[index] /
@@ -98,6 +103,7 @@ impl<FloatT: Rand + Float + FromPrimitive + Mul + Zero + Display> OrthogonalNMF<
         for col in 0..self.hidden.ncols() {
             for row in 0..self.hidden.nrows() {
                 let index = (row, col);
+                debug_assert!(FloatT::zero() != new_hidden_divisor[index]);
                 self.hidden[index] =
                     self.hidden[index] *
                     new_hidden_dividend[index] /
