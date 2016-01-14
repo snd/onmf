@@ -38,6 +38,7 @@ impl<T: Zero + One + FromPrimitive + ToPrimitive + PartialOrd + Float> ToImage f
         let mut image_buffer = ImageBuffer::new(self.ncols() as u32, self.nrows() as u32);
         for (x, y, pixel) in image_buffer.enumerate_pixels_mut() {
             let value = self[(y as usize, x as usize)];
+            assert!(value.is_nan());
             assert!(T::zero() <= value);
             assert!(value <= T::one());
             let max = T::from_u8(std::u8::MAX).unwrap();
