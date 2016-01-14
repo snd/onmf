@@ -17,12 +17,12 @@ fn main() {
 
     let steps = 6;
     let per_step = 10;
-    let ntimes = steps * per_step;
+    let nsamples = steps * per_step;
     let nobserved = 10 * 10;
     let nhidden = 10;
     let niterations = 100;
 
-    let mut data = DMat::<f64>::new_zeros(ntimes, nobserved);
+    let mut data = DMat::<f64>::new_zeros(nsamples, nobserved);
 
     // write on testimage into each row of data
     for (step, i, factor) in testimage_generator::testimages::<f64, _>(per_step, &mut rng) {
@@ -32,8 +32,10 @@ fn main() {
         }
     }
 
-    let nmf = onmf::OrthogonalNMF::<f64>::from_data(
-        &data, nhidden, niterations);
+    let mut nmf = onmf::OrthogonalNMF::<f64>::init_randomly(
+        nhidden, nobserved, nsamples);
+
+    for _ in 0..niterations { nmf.iterate(&data) }
 
     // read testimage out of each row of nmf.hidden
     for irow in 0..nhidden {

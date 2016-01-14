@@ -1,35 +1,42 @@
+use std::ops::{Mul};
+
 extern crate nalgebra;
 use self::nalgebra::{DMat};
 
 extern crate rand;
 use self::rand::{Rand};
 
+extern crate num;
+use self::num::{Float, FromPrimitive};
+
 pub struct OrthogonalNMF<FloatT> {
     // TODO add docstrings
     pub hidden: DMat<FloatT>,
     pub weights: DMat<FloatT>,
+    pub iteration: usize,
 }
 
-impl<FloatT: Rand> OrthogonalNMF<FloatT> {
+impl<FloatT: Rand + Float + FromPrimitive + Mul> OrthogonalNMF<FloatT> {
     /// one observed per column.
     /// one time per row.
-    pub fn from_data(data: &DMat<FloatT>, nhidden: usize, niterations: usize) -> OrthogonalNMF<FloatT> {
-        let nobserved = data.ncols();
-        let ntimes = data.nrows();
-        let mut nmf = OrthogonalNMF {
+    pub fn init_randomly(nhidden: usize, nobserved: usize, nsamples: usize) -> OrthogonalNMF<FloatT> {
+        OrthogonalNMF {
             hidden: DMat::new_random(nhidden, nobserved),
-            weights: DMat::new_random(ntimes, nhidden),
-        };
-        // TODO how many iterations ?
-        // it gets better and better with each iteration
-        // for i in 0..niterations {
-        //     // TODO alpha goes to infinity
-        //     // detail factor
-        //     // tunable
-        //     let alpha = 0.1 * 1.01.powi(i);
-        //     nmf.iterate(data, alpha);
-        // }
-        nmf
+            weights: DMat::new_random(nsamples, nhidden),
+            iteration: 0,
+        }
+    }
+
+    // TODO how many iterations ?
+    /// it gets better and better with each iteration
+    pub fn iterate(&mut self, data: &DMat<FloatT>) {
+        let nsamples = self.weights.nrows();
+        let nobserved = self.hidden.ncols();
+        assert_eq!(nsamples, data.nrows());
+        assert_eq!(nobserved, data.ncols());
+        let alpha: FloatT =
+            FloatT::from_f32(0.1).unwrap() *
+            FloatT::from_f32(1.01).unwrap().powi(self.iteration as i32);
     }
 
     // TODO maybe a function to reuse an existing OrthogonalNMF
