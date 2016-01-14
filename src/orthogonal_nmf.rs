@@ -48,7 +48,10 @@ impl<FloatT: Rand + Float + FromPrimitive + Mul + Zero + Display> OrthogonalNMF<
         assert_eq!(nsamples, data.nrows());
         assert_eq!(nobserved, data.ncols());
 
-        // this gets smaller and smaller with each iteration
+        // alpha gets larger and larger with each iteration
+        // 0.1, 0.101, 0.102, 0.103, ...
+        // at iteration 232 alpha first goes above 1.0
+        // iteration = 232 -> alpha = 1.005
         let alpha: FloatT =
             FloatT::from_f32(0.1).unwrap() *
             FloatT::from_f32(1.01).unwrap().powi(self.iteration as i32);
@@ -89,6 +92,10 @@ impl<FloatT: Rand + Float + FromPrimitive + Mul + Zero + Display> OrthogonalNMF<
         for col in 0..self.weights.ncols() {
             for row in 0..self.weights.nrows() {
                 let index = (row, col);
+                // if we have any zero in any of the matrizes
+                // self.weights or self.hidden then
+                // new_weights_divisor[index] will be zero
+                // TODO how to deal with this
                 debug_assert!(FloatT::zero() != new_weights_divisor[index]);
                 self.weights[index] =
                     self.weights[index] *
