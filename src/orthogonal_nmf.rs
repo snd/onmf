@@ -1,7 +1,5 @@
 use std::ops::{Mul, Add};
 
-use std::fmt::{Display};
-
 extern crate nalgebra;
 use self::nalgebra::{DMat, Transpose};
 
@@ -9,21 +7,19 @@ extern crate rand;
 use self::rand::{Rand};
 
 extern crate num;
-use self::num::{Float, Zero, FromPrimitive};
+use self::num::{Float, Zero};
 
 pub struct OrthogonalNMF<FloatT> {
     // TODO add docstrings
     pub hidden: DMat<FloatT>,
     pub weights: DMat<FloatT>,
-    pub iteration: usize,
 }
 
-impl<FloatT: Rand + Float + FromPrimitive + Mul + Zero + Display> OrthogonalNMF<FloatT> {
+impl<FloatT: Rand + Float + Mul + Zero> OrthogonalNMF<FloatT> {
     pub fn init_randomly(nhidden: usize, nobserved: usize, nsamples: usize) -> OrthogonalNMF<FloatT> {
         OrthogonalNMF {
             hidden: DMat::new_random(nhidden, nobserved),
             weights: DMat::new_random(nsamples, nhidden),
-            iteration: 0,
         }
     }
 
@@ -32,7 +28,6 @@ impl<FloatT: Rand + Float + FromPrimitive + Mul + Zero + Display> OrthogonalNMF<
         OrthogonalNMF {
             hidden: hidden,
             weights: weights,
-            iteration: 0,
         }
     }
 
@@ -41,22 +36,12 @@ impl<FloatT: Rand + Float + FromPrimitive + Mul + Zero + Display> OrthogonalNMF<
     /// it gets better and better with each iteration.
     /// one observed per column.
     /// one sample per row.
-    pub fn iterate(&mut self, data: &DMat<FloatT>) {
+    pub fn iterate(&mut self, alpha: FloatT, data: &DMat<FloatT>) {
         let nhidden = self.hidden.nrows();
         let nobserved = self.hidden.ncols();
         let nsamples = self.weights.nrows();
         assert_eq!(nsamples, data.nrows());
         assert_eq!(nobserved, data.ncols());
-
-        // alpha gets larger and larger with each iteration
-        // 0.1, 0.101, 0.102, 0.103, ...
-        // at iteration 232 alpha first goes above 1.0
-        // iteration = 232 -> alpha = 1.005
-        let alpha: FloatT =
-            FloatT::from_f32(0.1).unwrap() *
-            FloatT::from_f32(1.01).unwrap().powi(self.iteration as i32);
-
-        println!("iteration = {} alpha = {}", self.iteration, alpha);
 
         let hidden_transposed = self.hidden.transpose();
         let weights_transposed = self.weights.transpose();
@@ -132,7 +117,5 @@ impl<FloatT: Rand + Float + FromPrimitive + Mul + Zero + Display> OrthogonalNMF<
                 debug_assert!(FloatT::zero() != self.hidden[index]);
             }
         }
-
-        self.iteration += 1;
     }
 }

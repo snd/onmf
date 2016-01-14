@@ -9,6 +9,9 @@ use self::nalgebra::{DMat};
 extern crate rand;
 use rand::{StdRng, SeedableRng};
 
+extern crate num;
+use num::{Float};
+
 fn main() {
     let mag_factor = 10;
 
@@ -34,8 +37,24 @@ fn main() {
     let mut nmf = onmf::OrthogonalNMF::<f64>::init_randomly(
         nhidden, nobserved, nsamples);
 
+    let mut iteration: i32 = 0;
     loop {
-        nmf.iterate(&data);
+        // alpha gets larger and larger with each iteration
+        // 0.1, 0.101, 0.102, 0.103, ...
+        // at iteration 232 alpha first goes above 1.0
+        // iteration = 232 -> alpha = 1.005
+        // let alpha = 0.1 * 1.01.powi(iteration);
+        // TODO this could converge faster
+        // let alpha = 0.1 * 1.001.powi(iteration);
+
+        let alpha = 0.1;
+
+        // TODO maybe try an even smaller alpha
+        let alpha = 0.01;
+
+        println!("iteration = {} alpha = {}", iteration, alpha);
+
+        nmf.iterate(alpha, &data);
 
         // read testimage out of each row of nmf.hidden
         for irow in 0..nhidden {
@@ -46,7 +65,9 @@ fn main() {
             let image = DMat::<f64>::from_col_vec(10, 10, &column[..]);
             // println!("image {}", irow);
             // println!("{:?}", image);
-            magnify(image.normalize(), mag_factor).save_to_png(&format!("orthogonal-nmf-hidden-snapshot-{}.png", irow)[..]).unwrap();
+            magnify(image.normalize(), mag_factor).save_to_png(&format!("orthogonal-nmf-hidden-{}.png", irow)[..]).unwrap();
         }
+
+        iteration += 1;
     }
 }
