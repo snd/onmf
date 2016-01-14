@@ -22,7 +22,8 @@ fn main() {
     let per_step = 1000;
     let nsamples = steps * per_step;
     let nobserved = 10 * 10;
-    let nhidden = 20 + steps * 2;
+    // let nhidden = 20 + steps * 2;
+    let nhidden = 40;
 
     let mut data = DMat::<f64>::new_zeros(nsamples, nobserved);
 
@@ -43,14 +44,14 @@ fn main() {
         // 0.1, 0.101, 0.102, 0.103, ...
         // at iteration 232 alpha first goes above 1.0
         // iteration = 232 -> alpha = 1.005
-        // let alpha = 0.1 * 1.01.powi(iteration);
+        let alpha = 0.1 * 1.01.powi(iteration);
         // TODO this could converge faster
         // let alpha = 0.1 * 1.001.powi(iteration);
 
-        let alpha = 0.1;
+        // let alpha = 0.1;
 
         // TODO maybe try an even smaller alpha
-        let alpha = 0.01;
+        // let alpha = 0.01;
 
         println!("iteration = {} alpha = {}", iteration, alpha);
 
