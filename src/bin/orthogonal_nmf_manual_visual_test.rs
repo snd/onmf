@@ -20,7 +20,6 @@ fn main() {
     let nsamples = steps * per_step;
     let nobserved = 10 * 10;
     let nhidden = 10;
-    let niterations = 2;
 
     let mut data = DMat::<f64>::new_zeros(nsamples, nobserved);
 
@@ -35,8 +34,10 @@ fn main() {
     let mut nmf = onmf::OrthogonalNMF::<f64>::init_randomly(
         nhidden, nobserved, nsamples);
 
-    for _ in 0..niterations { nmf.iterate(&data) }
+    // 100 iterations
+    for _ in 0..100 { nmf.iterate(&data) }
 
+    // snapshot
     // read testimage out of each row of nmf.hidden
     for irow in 0..nhidden {
         let mut column = Vec::<f64>::new();
@@ -44,8 +45,21 @@ fn main() {
             column.push(nmf.hidden[(irow, icol)]);
         }
         let image = DMat::<f64>::from_col_vec(10, 10, &column[..]);
+        // println!("image {}", irow);
         // println!("{:?}", image);
-        magnify(image.normalize(), mag_factor).save_to_png(&format!("orthogonal-nmf-hidden-{}.png", irow)[..]).unwrap();
+        magnify(image.normalize(), mag_factor).save_to_png(&format!("orthogonal-nmf-hidden-iter-100-{}.png", irow)[..]).unwrap();
+    }
 
+    for _ in 0..10000 { nmf.iterate(&data) }
+
+    for irow in 0..nhidden {
+        let mut column = Vec::<f64>::new();
+        for icol in 0..nobserved {
+            column.push(nmf.hidden[(irow, icol)]);
+        }
+        let image = DMat::<f64>::from_col_vec(10, 10, &column[..]);
+        // println!("image {}", irow);
+        // println!("{:?}", image);
+        magnify(image.normalize(), mag_factor).save_to_png(&format!("orthogonal-nmf-hidden-iter-final-{}.png", irow)[..]).unwrap();
     }
 }

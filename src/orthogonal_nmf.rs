@@ -96,12 +96,19 @@ impl<FloatT: Rand + Float + FromPrimitive + Mul + Zero + Display> OrthogonalNMF<
                 // self.weights or self.hidden then
                 // new_weights_divisor[index] will be zero
                 // TODO how to deal with this
-                debug_assert!(FloatT::zero() != new_weights_divisor[index]);
+                let mut divisor = new_weights_divisor[index];
+                if FloatT::zero() == divisor {
+                    divisor = FloatT::min_positive_value();
+                }
+                debug_assert!(FloatT::zero() != divisor);
                 self.weights[index] =
                     self.weights[index] *
                     new_weights_dividend[index] /
-                    // these get larger and larger
-                    new_weights_divisor[index];
+                    divisor;
+                if FloatT::zero() == self.weights[index] {
+                    self.weights[index] = FloatT::min_positive_value();
+                }
+                debug_assert!(FloatT::zero() != self.weights[index]);
             }
         }
 
@@ -110,11 +117,19 @@ impl<FloatT: Rand + Float + FromPrimitive + Mul + Zero + Display> OrthogonalNMF<
         for col in 0..self.hidden.ncols() {
             for row in 0..self.hidden.nrows() {
                 let index = (row, col);
-                debug_assert!(FloatT::zero() != new_hidden_divisor[index]);
+                let mut divisor = new_hidden_divisor[index];
+                if FloatT::zero() == divisor {
+                    divisor = FloatT::min_positive_value();
+                }
+                debug_assert!(FloatT::zero() != divisor);
                 self.hidden[index] =
                     self.hidden[index] *
                     new_hidden_dividend[index] /
-                    new_hidden_divisor[index];
+                    divisor;
+                if FloatT::zero() == self.hidden[index] {
+                    self.hidden[index] = FloatT::min_positive_value();
+                }
+                debug_assert!(FloatT::zero() != self.hidden[index]);
             }
         }
 
