@@ -98,31 +98,10 @@ pub fn static_factors<T>() -> StaticReturnT<DMat<T>>
         .chain((1..10).map(helper_vertical as fn(usize) -> DMat<T>))
 }
 
-pub fn testimages<'a, T, R>(per_step: usize, rng: &'a mut R) -> ImgGen<'a, R, DMat<T>, HorizontalReturnT<DMat<T>>, VerticalReturnT<DMat<T>>>
-    where R: 'a,
-          T: Clone + Copy + Zero + One
-{
-    assert!(0 < per_step);
-    let mut horizontal_iter = horizontal_evolving_factors();
-    let mut vertical_iter = vertical_evolving_factors();
-    let horizontal = horizontal_iter.next().unwrap();
-    let vertical = vertical_iter.next().unwrap();
-    ImgGen {
-        per_step: per_step,
-        step: 0,
-        i: 0,
-        horizontal_iter: horizontal_iter,
-        vertical_iter: vertical_iter,
-        current_horizontal: horizontal,
-        current_vertical: vertical,
-        rng: rng,
-        static_factors: static_factors().collect::<Vec<DMat<T>>>(),
-    }
-}
-
 pub struct ImgGen<'a, R: 'a, T, IH, IV> {
     pub per_step: usize,
-    pub step: usize,
+    pub ihorizontal: usize,
+    pub ivertical: usize,
     pub i: usize,
     pub horizontal_iter: IH,
     pub vertical_iter: IV,
@@ -140,19 +119,22 @@ impl<'a, R, T, IH, IV> Iterator for ImgGen<'a, R, DMat<T>, IH, IV>
           Closed01<T>: Rand,
           DMat<T>: Div<T, Output=DMat<T>>
 {
-    type Item = (usize, usize, DMat<T>);
+    type Item = (usize, usize, usize, DMat<T>);
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.i == self.per_step {
-            let horizontal = self.horizontal_iter.next();
-            let vertical = self.vertical_iter.next();
-            self.step += 1;
-            if horizontal.is_none() || vertical.is_none() {
-                return None;
+            if self.ihorizontal <= self.ivertical {
+                let horizontal = self.horizontal_iter.next();
+                if horizontal.is_none() { return None; }
+                self.current_horizontal = horizontal.unwrap();
+                self.ihorizontal += 1;
+            } else{
+                let vertical = self.vertical_iter.next();
+                if vertical.is_none() { return None; }
+                self.current_vertical = vertical.unwrap();
+                self.ivertical += 1;
             }
 
-            self.current_horizontal = horizontal.unwrap();
-            self.current_vertical = vertical.unwrap();
             self.i = 0;
         }
 
@@ -168,6 +150,29 @@ impl<'a, R, T, IH, IV> Iterator for ImgGen<'a, R, DMat<T>, IH, IV>
         result = result.clone() + (self.current_horizontal.clone() * random01(&mut self.rng))
             + (self.current_vertical.clone() * random01(&mut self.rng));
 
-        Some((self.step, i, result.normalize()))
+        Some((self.ihorizontal, self.ivertical, i, result.normalize()))
+    }
+}
+
+pub fn testimages<'a, T, R>(per_step: usize, rng: &'a mut R) -> ImgGen<'a, R, DMat<T>, HorizontalReturnT<DMat<T>>, VerticalReturnT<DMat<T>>>
+    where R: 'a,
+          T: Clone + Copy + Zero + One
+{
+    assert!(0 < per_step);
+    let mut horizontal_iter = horizontal_evolving_factors();
+    let mut vertical_iter = vertical_evolving_factors();
+    let horizontal = horizontal_iter.next().unwrap();
+    let vertical = vertical_iter.next().unwrap();
+    ImgGen {
+        per_step: per_step,
+        ihorizontal: 0,
+        ivertical: 0,
+        i: 0,
+        horizontal_iter: horizontal_iter,
+        vertical_iter: vertical_iter,
+        current_horizontal: horizontal,
+        current_vertical: vertical,
+        rng: rng,
+        static_factors: static_factors().collect::<Vec<DMat<T>>>(),
     }
 }

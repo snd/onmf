@@ -23,7 +23,7 @@ fn main() {
     let mut rng: StdRng = SeedableRng::from_seed(seed);
 
     let per_step = 10;
-    for (step, i, factor) in testimage_generator::testimages::<f64, _>(per_step, &mut rng) {
-        magnify(factor, mag_factor).save_to_png(&format!("test-{}-{}.png", step, i)[..]).unwrap();
+    for (horizontal, vertical, i, factor) in testimage_generator::testimages::<f64, _>(per_step, &mut rng) {
+        magnify(factor, mag_factor).save_to_png(&format!("test-{}-{}-{}.png", horizontal, vertical, i)[..]).unwrap();
     }
 }

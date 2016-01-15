@@ -17,18 +17,18 @@ fn main() {
     let seed: &[_] = &[1, 2, 3, 4];
     let mut rng: StdRng = SeedableRng::from_seed(seed);
 
-    let steps = 6;
+    let steps = 12;
     let per_step = 1000;
     let nsamples = steps * per_step;
     let nobserved = 10 * 10;
-    // let nhidden = 20 + steps * 2;
-    let nhidden = 40;
+    let nhidden = 20 + steps;
+    // let nhidden = 40;
 
     let mut data = DMat::<f64>::new_zeros(nsamples, nobserved);
 
     // write one testimage into each row of data
-    for (step, i, factor) in testimage_generator::testimages::<f64, _>(per_step, &mut rng) {
-        let row = step * i;
+    for (horizontal, vertical, i, factor) in testimage_generator::testimages::<f64, _>(per_step, &mut rng) {
+        let row = (horizontal + vertical) * i;
         for (col, val) in factor.as_vec().iter().enumerate() {
             data[(row, col)] = val.clone();
         }
