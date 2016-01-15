@@ -44,6 +44,12 @@ impl<FloatT: Zero + Clone + Copy> OnlineNMF<FloatT> {
         self.hidden.nrows()
     }
 
+    /// returns the number of data points
+    #[inline]
+    pub fn nsamples(&self) -> usize {
+        self.weights.nrows()
+    }
+
     pub fn update(&mut self, new_observed_columns: &DMat<FloatT>) {
         assert_eq!(self.nobserved(), new_observed_columns.nrows());
 
