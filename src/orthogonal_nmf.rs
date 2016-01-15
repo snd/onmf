@@ -95,7 +95,6 @@ impl<FloatT> OrthogonalNMF<FloatT>
             .add(gamma.mul(&self.hidden));
 
         // compute new weights
-        // TODO cache efficient order ?
         // TODO possibly use simd for this
         for col in 0..self.weights.ncols() {
             for row in 0..self.weights.nrows() {
@@ -121,7 +120,6 @@ impl<FloatT> OrthogonalNMF<FloatT>
         }
 
         // compute new hidden
-        // TODO cache efficient order ?
         // TODO possibly use simd for this
         for col in 0..self.hidden.ncols() {
             for row in 0..self.hidden.nrows() {
