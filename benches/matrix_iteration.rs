@@ -7,6 +7,10 @@ use self::nalgebra::{DMat};
 const NSAMPLES: usize = 6 * 1000;
 const NHIDDEN: usize = 20;
 
+// rule of thumb:
+// column major = iterate column first
+// row major = iterate row first
+
 #[bench]
 fn bench_dmat_col_then_row_iteration(bencher: &mut test::Bencher) {
     let dividend = DMat::<f64>::new_ones(NSAMPLES, NHIDDEN);
