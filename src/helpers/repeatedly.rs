@@ -1,5 +1,3 @@
-extern crate rand;
-
 pub struct Repeatedly<F> {
     pub f: F,
 }
@@ -22,7 +20,7 @@ pub fn repeatedly<T, F: FnMut() -> T>(f: F) -> Repeatedly<F> {
 
 #[test]
 fn test_repeatedly() {
-    use self::rand::{StdRng, SeedableRng};
+    use rand::{StdRng, SeedableRng};
     use helpers::random01;
 
     assert_eq!(vec![3, 3, 3, 3],
