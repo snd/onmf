@@ -1,12 +1,9 @@
 use std::ops::Div;
 
+use nalgebra::DMat;
+use num::{Zero};
+
 use helpers::PartialMaxIteratorExt;
-
-extern crate nalgebra;
-use self::nalgebra::DMat;
-
-extern crate num;
-use self::num::{Zero};
 
 pub trait Normalize {
     /// divide all values in `self` by max value in `self`

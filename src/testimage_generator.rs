@@ -20,14 +20,9 @@ and not as a 2D array.
 use std::ops::{Range, Div};
 use std::iter::{Map, Rev, once, Once, Chain, Zip};
 
-extern crate nalgebra;
-use self::nalgebra::{DMat};
-
-extern crate num;
-use self::num::traits::{Zero, One};
-
-extern crate rand;
-use self::rand::{Rng, Closed01, Rand};
+use nalgebra::{DMat};
+use num::traits::{Zero, One};
+use rand::{Rng, Closed01, Rand};
 
 use helpers::{random01, Normalize};
 

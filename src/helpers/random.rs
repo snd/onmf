@@ -1,5 +1,4 @@
-extern crate rand;
-use self::rand::{Rng, Closed01, Rand};
+use rand::{Rng, Closed01, Rand};
 
 /// returns a random number between `0.` (inclusive) and `1.` (inclusive)
 pub fn random01<T, R>(rng: &mut R) -> T
@@ -12,7 +11,7 @@ pub fn random01<T, R>(rng: &mut R) -> T
 
 #[test]
 fn test_random01() {
-    use self::rand::{StdRng, SeedableRng};
+    use rand::{StdRng, SeedableRng};
 
     let seed: &[_] = &[1, 2, 3, 4];
     let mut rng: StdRng = SeedableRng::from_seed(seed);

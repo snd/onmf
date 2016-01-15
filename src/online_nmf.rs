@@ -6,11 +6,8 @@ use it by repeatedly calling `update` with data
 and inspecting `hidden` and `weights`.
 */
 
-extern crate num;
-use self::num::{Zero};
-
-extern crate nalgebra;
-use self::nalgebra::{DMat};
+use num::{Zero};
+use nalgebra::{DMat};
 
 pub struct OnlineNMF<FloatT> {
     /// maps hidden variables (one per row) to observed variables (one per column).

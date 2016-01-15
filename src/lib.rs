@@ -1,5 +1,9 @@
 #[macro_use]
 extern crate quick_error;
+extern crate num;
+extern crate nalgebra;
+extern crate rand;
+extern crate image;
 
 pub mod testimage_generator;
 

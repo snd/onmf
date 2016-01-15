@@ -1,15 +1,10 @@
 use std;
-
 use std::cmp::PartialOrd;
 
-extern crate num;
-use self::num::traits::{Zero, One, FromPrimitive, ToPrimitive, Float};
-
-extern crate nalgebra;
-use self::nalgebra::{DMat};
-
-extern crate image;
-use self::image::{ImageBuffer, Luma, DynamicImage};
+use num::traits::{Zero, One, FromPrimitive, ToPrimitive, Float};
+use nalgebra::{DMat};
+use image;
+use image::{ImageBuffer, Luma, DynamicImage};
 
 quick_error! {
     #[derive(Debug)]
