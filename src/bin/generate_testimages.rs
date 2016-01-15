@@ -1,7 +1,6 @@
 extern crate onmf;
-use onmf::helpers::{ToImage};
+use onmf::helpers::{ToImage, magnify};
 use onmf::testimage_generator;
-use onmf::testimage_generator::{magnify};
 
 extern crate rand;
 use rand::{StdRng, SeedableRng};

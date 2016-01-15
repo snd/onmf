@@ -20,3 +20,6 @@ pub use self::random::random01;
 
 pub mod to_image;
 pub use self::to_image::ToImage;
+
+mod magnify;
+pub use self::magnify::magnify;

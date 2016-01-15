@@ -1,7 +1,6 @@
 extern crate onmf;
-use onmf::helpers::{ToImage, Normalize};
+use onmf::helpers::{ToImage, Normalize, magnify};
 use onmf::testimage_generator;
-use onmf::testimage_generator::{magnify};
 
 extern crate nalgebra;
 use self::nalgebra::{DMat};
