@@ -35,8 +35,8 @@ fn main() {
         }
     }
 
-    let mut nmf = onmf::OrthogonalNMF::<f64>::init_randomly(
-        nhidden, nobserved, nsamples);
+    let mut nmf = onmf::OrthogonalNMF::<f64>::init_random01(
+        nhidden, nobserved, nsamples, &mut rng);
 
     let mut iteration: i32 = 0;
     loop {

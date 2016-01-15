@@ -1,13 +1,10 @@
 use std::ops::{Mul, Add};
 
-extern crate nalgebra;
-use self::nalgebra::{DMat, Transpose};
+use nalgebra::{DMat, Transpose};
+use rand::{Rand, Rng, Closed01};
+use num::{Float, Zero};
 
-extern crate rand;
-use self::rand::{Rand};
-
-extern crate num;
-use self::num::{Float, Zero};
+use helpers::random01;
 
 pub struct OrthogonalNMF<FloatT> {
     // TODO add docstrings
@@ -15,12 +12,22 @@ pub struct OrthogonalNMF<FloatT> {
     pub weights: DMat<FloatT>,
 }
 
-impl<FloatT: Rand + Float + Mul + Zero> OrthogonalNMF<FloatT> {
-    pub fn init_randomly(nhidden: usize, nobserved: usize, nsamples: usize) -> OrthogonalNMF<FloatT> {
-        OrthogonalNMF {
-            hidden: DMat::new_random(nhidden, nobserved),
-            weights: DMat::new_random(nsamples, nhidden),
+impl<FloatT> OrthogonalNMF<FloatT>
+    where FloatT: Float + Mul + Zero,
+          Closed01<FloatT>: Rand
+{
+    pub fn init_random01<R: Rng>(nhidden: usize, nobserved: usize, nsamples: usize, rng: &mut R) -> OrthogonalNMF<FloatT> {
+        let mut hidden = unsafe { DMat::new_uninitialized(nhidden, nobserved) };
+        for x in hidden.as_mut_vec().iter_mut() {
+            *x = random01(rng);
         }
+
+        let mut weights = unsafe { DMat::new_uninitialized(nsamples, nhidden) };
+        for x in weights.as_mut_vec().iter_mut() {
+            *x = random01(rng);
+        }
+
+        Self::init(hidden, weights)
     }
 
     // TODO initialize with values from last time step t-1 instead of choosing randomly
@@ -31,17 +38,32 @@ impl<FloatT: Rand + Float + Mul + Zero> OrthogonalNMF<FloatT> {
         }
     }
 
+    /// returns the number of observed variables
+    #[inline]
+    pub fn nobserved(&self) -> usize {
+        self.hidden.ncols()
+    }
+
+    /// returns the number of hidden variables
+    #[inline]
+    pub fn nhidden(&self) -> usize {
+        self.hidden.nrows()
+    }
+
+    /// returns the number of data points
+    #[inline]
+    pub fn nsamples(&self) -> usize {
+        self.weights.nrows()
+    }
+
     // TODO how many iterations ?
     // TODO compare this to the seoung solution
     /// it gets better and better with each iteration.
     /// one observed per column.
     /// one sample per row.
     pub fn iterate(&mut self, alpha: FloatT, data: &DMat<FloatT>) {
-        let nhidden = self.hidden.nrows();
-        let nobserved = self.hidden.ncols();
-        let nsamples = self.weights.nrows();
-        assert_eq!(nsamples, data.nrows());
-        assert_eq!(nobserved, data.ncols());
+        assert_eq!(self.nsamples(), data.nrows());
+        assert_eq!(self.nobserved(), data.ncols());
 
         let hidden_transposed = self.hidden.transpose();
         let weights_transposed = self.weights.transpose();
@@ -56,7 +78,7 @@ impl<FloatT: Rand + Float + Mul + Zero> OrthogonalNMF<FloatT> {
 
         // gamma is a symetric matrix with diagonal elements equal to zero
         // and other elements = alpha
-        let gamma_size = nhidden;
+        let gamma_size = self.nhidden();
         let mut gamma = DMat::from_elem(gamma_size, gamma_size, alpha);
 
         // set diagonal to zero
@@ -73,7 +95,8 @@ impl<FloatT: Rand + Float + Mul + Zero> OrthogonalNMF<FloatT> {
             .add(gamma.mul(&self.hidden));
 
         // compute new weights
-        // TODO efficient order ?
+        // TODO cache efficient order ?
+        // TODO possibly use simd for this
         for col in 0..self.weights.ncols() {
             for row in 0..self.weights.nrows() {
                 let index = (row, col);
@@ -98,7 +121,8 @@ impl<FloatT: Rand + Float + Mul + Zero> OrthogonalNMF<FloatT> {
         }
 
         // compute new hidden
-        // TODO efficient order ?
+        // TODO cache efficient order ?
+        // TODO possibly use simd for this
         for col in 0..self.hidden.ncols() {
             for row in 0..self.hidden.nrows() {
                 let index = (row, col);
