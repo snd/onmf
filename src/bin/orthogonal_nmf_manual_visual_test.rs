@@ -34,7 +34,7 @@ fn main() {
         }
     }
 
-    let mut nmf = onmf::OrthogonalNMF::<f64>::init_random01(
+    let mut ortho_nmf = onmf::OrthogonalNMF::<f64>::init_random01(
         nhidden, nobserved, nsamples, &mut rng);
 
     let mut iteration: i32 = 0;
@@ -54,13 +54,13 @@ fn main() {
 
         println!("iteration = {} alpha = {}", iteration, alpha);
 
-        nmf.iterate(alpha, &data);
+        ortho_nmf.iterate(alpha, &data);
 
         // read testimage out of each row of nmf.hidden
         for irow in 0..nhidden {
             let mut column = Vec::<f64>::new();
             for icol in 0..nobserved {
-                column.push(nmf.hidden[(irow, icol)]);
+                column.push(ortho_nmf.hidden[(irow, icol)]);
             }
             let image = DMat::<f64>::from_col_vec(10, 10, &column[..]);
             // println!("image {}", irow);
