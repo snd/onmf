@@ -4,6 +4,7 @@ extern crate num;
 extern crate nalgebra;
 extern crate rand;
 extern crate image;
+extern crate ndarray;
 
 pub mod testimage_generator;
 

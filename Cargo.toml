@@ -17,3 +17,7 @@ num = "0.1.30"
 quick-error = "0.2.1"
 rand = "0.3.12"
 rblas = "0.0.13"
+
+[dependencies.ndarray]
+version = "0.3.0"
+features = ["rblas"]
