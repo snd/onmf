@@ -15,3 +15,6 @@ pub use online_nmf::OnlineNMF;
 
 mod orthogonal_nmf;
 pub use orthogonal_nmf::OrthogonalNMF;
+
+mod orthogonal_nmf_blas;
+pub use orthogonal_nmf_blas::OrthogonalNMFBlas;
