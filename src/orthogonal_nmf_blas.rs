@@ -1,13 +1,30 @@
 use std::ops::{Mul, Add};
 
-use nalgebra::{DMat, Transpose};
 use rand::{Rand, Rng, Closed01};
 use num::{Float, Zero};
 
-use helpers::random01;
+use rblas::{Gemm, Matrix};
+use rblas::attribute::Transpose;
 
 use ndarray::ArrayBase;
 use ndarray::blas::AsBlas;
+use ndarray::blas;
+
+use helpers::random01;
+
+pub trait ShapeAsTuple<T> {
+    fn shape_as_tuple(&self) -> T;
+}
+
+impl<T> ShapeAsTuple<(usize, usize)> for ArrayBase<Vec<T>, (usize, usize)> {
+    #[inline]
+    fn shape_as_tuple(&self) -> (usize, usize) {
+        (self.shape()[0], self.shape()[1])
+    }
+}
+
+// TODO Dimension type alias
+// TODO OwnedArray
 
 pub struct OrthogonalNMFBlas<FloatT> {
     pub hidden: ArrayBase<Vec<FloatT>, (usize, usize)>,
@@ -15,17 +32,19 @@ pub struct OrthogonalNMFBlas<FloatT> {
 
     // these hold temporary results during an iteration.
     // kept in struct to prevent unnecessary memory allocations.
-    // pub weights_dividend: ArrayBase<Vec<FloatT>, (usize, usize)>,
-    // pub weights_divisor: ArrayBase<Vec<FloatT>, (usize, usize)>,
-    // pub weights_divisor_reconstruction: ArrayBase<Vec<FloatT>, (usize, usize)>,
+    pub tmp_weights_dividend: ArrayBase<Vec<FloatT>, (usize, usize)>,
+    // pub tmp_weights_divisor: ArrayBase<Vec<FloatT>, (usize, usize)>,
+    // pub tmp_weights_divisor_reconstruction: ArrayBase<Vec<FloatT>, (usize, usize)>,
     //
-    // pub hidden_dividend: ArrayBase<Vec<FloatT>, (usize, usize)>,
-    // pub hidden_divisor: ArrayBase<Vec<FloatT>, (usize, usize)>,
-    // pub hidden_divisor_tmp: ArrayBase<Vec<FloatT>, (usize, usize)>,
+    // pub tmp_hidden_dividend: ArrayBase<Vec<FloatT>, (usize, usize)>,
+    // pub tmp_hidden_divisor: ArrayBase<Vec<FloatT>, (usize, usize)>,
+    // pub tmp_hidden_divisor_tmp: ArrayBase<Vec<FloatT>, (usize, usize)>,
 }
 
 impl<FloatT> OrthogonalNMFBlas<FloatT>
-    where FloatT: Float + Mul + Zero,
+    where FloatT: Float + Mul + Zero + Clone + Gemm,
+          // ArrayBase<Vec<FloatT>, (usize, usize)>: Matrix,
+          // ndarray::blas::BlasArrayViewMut
           Closed01<FloatT>: Rand
 {
     pub fn init_random01<R: Rng>(nhidden: usize, nobserved: usize, nsamples: usize, rng: &mut R) -> OrthogonalNMFBlas<FloatT> {
@@ -44,9 +63,11 @@ impl<FloatT> OrthogonalNMFBlas<FloatT>
 
     // TODO initialize with values from last time step t-1 instead of choosing randomly
     pub fn init(hidden: ArrayBase<Vec<FloatT>, (usize, usize)>, weights: ArrayBase<Vec<FloatT>, (usize, usize)>) -> OrthogonalNMFBlas<FloatT> {
+        let weights_shape = weights.shape_as_tuple();
         OrthogonalNMFBlas {
             hidden: hidden,
             weights: weights,
+            tmp_weights_dividend: ArrayBase::zeros(weights_shape),
         }
     }
 
@@ -68,14 +89,24 @@ impl<FloatT> OrthogonalNMFBlas<FloatT>
         self.weights.shape()[0]
     }
 
+    // TODO samples_shape ?
+}
+
+impl OrthogonalNMFBlas<f64> {
     // TODO how many iterations ?
     // TODO compare this to the seoung solution
     /// it gets better and better with each iteration.
     /// one observed per column.
     /// one sample per row.
-    pub fn iterate(&mut self, alpha: FloatT, data: &ArrayBase<Vec<FloatT>, (usize, usize)>) {
-        assert_eq!(self.nsamples(), data.shape()[0]);
-        assert_eq!(self.nobserved(), data.shape()[1]);
+    pub fn iterate(&mut self, alpha: f64, samples: &mut ArrayBase<Vec<f64>, (usize, usize)>) {
+        assert_eq!(samples.shape_as_tuple(), (self.nsamples(), self.nobserved()));
+
+        Gemm::gemm(
+            &1.,
+            Transpose::NoTrans, &samples.blas(),
+            Transpose::Trans, &self.hidden.blas(),
+            &0.,
+            &mut self.tmp_weights_dividend.blas());
 //
 //         // has the same shape as weights
 //         let new_weights_dividend = data.clone().mul(&hidden_transposed);
