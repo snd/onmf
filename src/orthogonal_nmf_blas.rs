@@ -68,14 +68,14 @@ impl<FloatT> OrthogonalNMFBlas<FloatT>
         self.weights.shape()[0]
     }
 
-//     // TODO how many iterations ?
-//     // TODO compare this to the seoung solution
-//     /// it gets better and better with each iteration.
-//     /// one observed per column.
-//     /// one sample per row.
-//     pub fn iterate(&mut self, alpha: FloatT, data: &DMat<FloatT>) {
-//         assert_eq!(self.nsamples(), data.shape()[0]);
-//         assert_eq!(self.nobserved(), data.shape()[1]);
+    // TODO how many iterations ?
+    // TODO compare this to the seoung solution
+    /// it gets better and better with each iteration.
+    /// one observed per column.
+    /// one sample per row.
+    pub fn iterate(&mut self, alpha: FloatT, data: &ArrayBase<Vec<FloatT>, (usize, usize)>) {
+        assert_eq!(self.nsamples(), data.shape()[0]);
+        assert_eq!(self.nobserved(), data.shape()[1]);
 //
 //         // has the same shape as weights
 //         let new_weights_dividend = data.clone().mul(&hidden_transposed);
@@ -148,5 +148,5 @@ impl<FloatT> OrthogonalNMFBlas<FloatT>
 //                 debug_assert!(FloatT::zero() != self.hidden[index]);
 //             }
 //         }
-//     }
+    }
 }
