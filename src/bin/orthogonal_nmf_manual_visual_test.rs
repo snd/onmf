@@ -6,15 +6,19 @@ extern crate nalgebra;
 use self::nalgebra::{DMat};
 
 extern crate rand;
-use rand::{StdRng, SeedableRng};
+use rand::{StdRng, SeedableRng, ChaChaRng};
 
 extern crate num;
 use num::{Float};
+
+extern crate ndarray;
+use ndarray::ArrayBase;
 
 fn main() {
     let mag_factor = 10;
 
     let seed: &[_] = &[1, 2, 3, 4];
+    // let mut rng: ChaChaRng = ChaChaRng::from_seed(seed);
     let mut rng: StdRng = SeedableRng::from_seed(seed);
 
     let steps = 12;
@@ -24,7 +28,8 @@ fn main() {
     let nhidden = 20 + steps;
     // let nhidden = 40;
 
-    let mut data = DMat::<f64>::new_zeros(nsamples, nobserved);
+    let mut data: ArrayBase<Vec<f64>, (usize, usize)> =
+        ArrayBase::zeros((nsamples, nobserved));
 
     // write one testimage into each row of data
     for (horizontal, vertical, i, factor) in testimage_generator::testimages::<f64, _>(per_step, &mut rng) {
@@ -34,7 +39,8 @@ fn main() {
         }
     }
 
-    let mut ortho_nmf = onmf::OrthogonalNMF::<f64>::init_random01(
+    // let mut ortho_nmf = onmf::OrthogonalNMF::<f64>::init_random01(
+    let mut ortho_nmf = onmf::OrthogonalNMFBlas::init_random01(
         nhidden, nobserved, nsamples, &mut rng);
 
     let mut iteration: i32 = 0;
@@ -45,7 +51,7 @@ fn main() {
         // iteration = 232 -> alpha = 1.005
         let alpha = 0.1 * 1.01.powi(iteration);
         // TODO this could converge faster
-        // let alpha = 0.1 * 1.001.powi(iteration);
+        // let alpha = 0.1 * 1.0001.powi(iteration);
 
         // let alpha = 0.1;
 
@@ -54,7 +60,7 @@ fn main() {
 
         println!("iteration = {} alpha = {}", iteration, alpha);
 
-        ortho_nmf.iterate(alpha, &data);
+        ortho_nmf.iterate(alpha, &mut data);
 
         // read testimage out of each row of nmf.hidden
         for irow in 0..nhidden {
