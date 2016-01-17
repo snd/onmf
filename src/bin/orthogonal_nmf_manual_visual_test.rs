@@ -25,8 +25,8 @@ fn main() {
     let per_step = 1000;
     let nsamples = steps * per_step;
     let nobserved = 10 * 10;
-    let nhidden = 20 + steps;
-    // let nhidden = 40;
+    // let nhidden = 20 + steps;
+    let nhidden = 40;
 
     let mut data: ArrayBase<Vec<f64>, (usize, usize)> =
         ArrayBase::zeros((nsamples, nobserved));
