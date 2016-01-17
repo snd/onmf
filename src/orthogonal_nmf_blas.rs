@@ -34,13 +34,13 @@ pub struct OrthogonalNMFBlas {
     // these hold temporary results during an iteration.
     // kept in struct to prevent unnecessary memory allocations.
     // TODO dont call these tmp
-    pub tmp_weights_dividend: ArrayBase<Vec<FloatT>, (usize, usize)>,
-    pub tmp_weights_divisor: ArrayBase<Vec<FloatT>, (usize, usize)>,
-    pub tmp_weights_divisor_reconstruction: ArrayBase<Vec<FloatT>, (usize, usize)>,
+    pub weights_dividend: ArrayBase<Vec<FloatT>, (usize, usize)>,
+    pub weights_divisor: ArrayBase<Vec<FloatT>, (usize, usize)>,
+    pub weights_divisor_reconstruction: ArrayBase<Vec<FloatT>, (usize, usize)>,
 
-    pub tmp_hidden_dividend: ArrayBase<Vec<FloatT>, (usize, usize)>,
-    pub tmp_hidden_divisor: ArrayBase<Vec<FloatT>, (usize, usize)>,
-    pub tmp_hidden_divisor_partial: ArrayBase<Vec<FloatT>, (usize, usize)>,
+    pub hidden_dividend: ArrayBase<Vec<FloatT>, (usize, usize)>,
+    pub hidden_divisor: ArrayBase<Vec<FloatT>, (usize, usize)>,
+    pub hidden_divisor_partial: ArrayBase<Vec<FloatT>, (usize, usize)>,
 }
 
 impl OrthogonalNMFBlas
@@ -49,6 +49,8 @@ impl OrthogonalNMFBlas
           // BlasArrayViewMut<'a, FloatT, (usize, usize)>: Matrix<FloatT>,
           // Closed01<FloatT>: Rand
 {
+    // TODO type alias for that ArrayBase stuff
+
     pub fn init_random01<R: Rng>(nhidden: usize, nobserved: usize, nsamples: usize, rng: &mut R) -> OrthogonalNMFBlas {
         let mut hidden = ArrayBase::zeros((nhidden, nobserved));
         for x in hidden.iter_mut() {
@@ -77,12 +79,12 @@ impl OrthogonalNMFBlas
         OrthogonalNMFBlas {
             hidden: hidden,
             weights: weights,
-            tmp_weights_dividend: ArrayBase::zeros(weights_shape),
-            tmp_weights_divisor: ArrayBase::zeros(weights_shape),
-            tmp_weights_divisor_reconstruction: ArrayBase::zeros(samples_shape),
-            tmp_hidden_dividend: ArrayBase::zeros(hidden_shape),
-            tmp_hidden_divisor: ArrayBase::zeros(hidden_shape),
-            tmp_hidden_divisor_partial: ArrayBase::zeros((nhidden, nhidden)),
+            weights_dividend: ArrayBase::zeros(weights_shape),
+            weights_divisor: ArrayBase::zeros(weights_shape),
+            weights_divisor_reconstruction: ArrayBase::zeros(samples_shape),
+            hidden_dividend: ArrayBase::zeros(hidden_shape),
+            hidden_divisor: ArrayBase::zeros(hidden_shape),
+            hidden_divisor_partial: ArrayBase::zeros((nhidden, nhidden)),
         }
     }
 
@@ -115,7 +117,7 @@ impl OrthogonalNMFBlas
             Transpose::NoTrans, &samples.blas(),
             Transpose::Trans, &self.hidden.blas(),
             &0.,
-            &mut self.tmp_weights_dividend.blas());
+            &mut self.weights_dividend.blas());
 
     }
 
@@ -127,13 +129,13 @@ impl OrthogonalNMFBlas
             Transpose::NoTrans, &self.weights.blas(),
             Transpose::NoTrans, &self.hidden.blas(),
             &0.,
-            &mut self.tmp_weights_divisor_reconstruction.blas());
+            &mut self.weights_divisor_reconstruction.blas());
         Gemm::gemm(
             &1.,
-            Transpose::NoTrans, &self.tmp_weights_divisor_reconstruction.blas(),
+            Transpose::NoTrans, &self.weights_divisor_reconstruction.blas(),
             Transpose::Trans, &self.hidden.blas(),
             &0.,
-            &mut self.tmp_weights_divisor.blas());
+            &mut self.weights_divisor.blas());
     }
 
     #[inline]
@@ -143,20 +145,46 @@ impl OrthogonalNMFBlas
             Transpose::Trans, &self.weights.blas(),
             Transpose::NoTrans, &samples.blas(),
             &0.,
-            &mut self.tmp_hidden_dividend.blas());
+            &mut self.hidden_dividend.blas());
+    }
+
+    /// gamma is a symetric matrix with diagonal elements equal to zero
+    /// and other elements = alpha
+    pub fn alpha_to_gamma(alpha: FloatT, nhidden: usize) -> ArrayBase<Vec<f64>, (usize, usize)> {
+        let mut gamma = ArrayBase::<Vec<f64>, (usize, usize)>::from_elem((nhidden, nhidden), alpha);
+        for x in gamma.diag_mut().iter_mut() {
+            *x = 0.
+        }
+        gamma
     }
 
     #[inline]
-    pub fn iterate_hidden_divisor(&mut self, alpha: FloatT, samples: &mut ArrayBase<Vec<FloatT>, (usize, usize)>) {
-        // // gamma is a symetric matrix with diagonal elements equal to zero
-        // // and other elements = alpha
-        // let gamma_size = self.nhidden();
-        // let mut gamma = DMat::from_elem(gamma_size, gamma_size, alpha);
-        //
-        // // set diagonal to zero
-        // for i in 0..gamma_size {
-        //     gamma[(i, i)] = FloatT::zero();
-        // }
+    pub fn iterate_hidden_divisor(&mut self, samples: &mut ArrayBase<Vec<FloatT>, (usize, usize)>, gamma: &mut ArrayBase<Vec<FloatT>, (usize, usize)>) {
+        // we must make a copy here because we need two mutable
+        // references to weights at the same time for .blas()
+        // weights_copy.clone_from(&weights);
+        // TODO is there away to prevent this
+        // maybe use clone_from here
+        let mut weights_copy = self.weights.clone();
+        Gemm::gemm(
+            &1.,
+            Transpose::Trans, &self.weights.blas(),
+            Transpose::NoTrans, &weights_copy.blas(),
+            &0.,
+            &mut self.hidden_divisor_partial.blas());
+        Gemm::gemm(
+            &1.,
+            Transpose::NoTrans, &gamma.blas(),
+            Transpose::NoTrans, &self.hidden.blas(),
+            &0.,
+            &mut self.hidden_divisor.blas());
+        Gemm::gemm(
+            &1.,
+            Transpose::NoTrans, &self.hidden_divisor_partial.blas(),
+            Transpose::NoTrans, &self.hidden.blas(),
+            // add to previous contents of self.hidden_divisor
+            &1.,
+            &mut self.hidden_divisor.blas());
     }
 
     // TODO better name
@@ -207,15 +235,17 @@ impl OrthogonalNMFBlas
         self.iterate_weights_dividend(samples);
         self.iterate_weights_divisor();
         self.iterate_hidden_dividend(samples);
-        self.iterate_hidden_divisor(alpha, samples);
+        let mut gamma = OrthogonalNMFBlas::alpha_to_gamma(
+            alpha, self.nhidden());
+        self.iterate_hidden_divisor(samples, &mut gamma);
 
         OrthogonalNMFBlas::update(
-            &self.tmp_weights_dividend,
-            &self.tmp_weights_divisor,
+            &self.weights_dividend,
+            &self.weights_divisor,
             &mut self.weights);
         OrthogonalNMFBlas::update(
-            &self.tmp_hidden_dividend,
-            &self.tmp_hidden_divisor,
+            &self.hidden_dividend,
+            &self.hidden_divisor,
             &mut self.hidden);
     }
 }
