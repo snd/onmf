@@ -15,6 +15,8 @@ use num::{Float};
 extern crate ndarray;
 use ndarray::{ArrayBase};
 
+// TODO make a macro that creates these benches
+
 macro_rules! bench_ortho_nmf {
     ($bencher:expr, $float:ty, $nhidden:expr, $nobserved:expr, $nsamples:expr) => {{
         let seed: &[_] = &[1, 2, 3, 4];
@@ -49,6 +51,29 @@ macro_rules! bench_ortho_nmf_blas {
     }}
 }
 
+#[bench]
+fn bench_ortho_nmf_blas_8_32_16(bencher: &mut test::Bencher) {
+    bench_ortho_nmf_blas!(bencher, 8, 32, 16);
+}
+
+#[bench]
+fn bench_ortho_nmf_blas_6_32_206(bencher: &mut test::Bencher) {
+    bench_ortho_nmf_blas!(bencher, 6, 32, 206);
+}
+
+#[bench]
+fn bench_ortho_nmf_blas_10_64_30(bencher: &mut test::Bencher) {
+    bench_ortho_nmf_blas!(bencher, 10, 64, 30);
+}
+#[bench]
+fn bench_ortho_nmf_blas_10_64_60(bencher: &mut test::Bencher) {
+    bench_ortho_nmf_blas!(bencher, 10, 64, 60);
+}
+
+#[bench]
+fn bench_ortho_nmf_blas_10_64_100(bencher: &mut test::Bencher) {
+    bench_ortho_nmf_blas!(bencher, 10, 64, 100);
+}
 
 #[bench]
 fn bench_ortho_nmf_f64_10_256_11(bencher: &mut test::Bencher) {
