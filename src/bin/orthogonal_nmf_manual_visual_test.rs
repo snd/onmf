@@ -58,20 +58,23 @@ fn main() {
         // TODO maybe try an even smaller alpha
         // let alpha = 0.01;
 
-        println!("iteration = {} alpha = {}", iteration, alpha);
 
         ortho_nmf.iterate(alpha, &mut data);
 
-        // read testimage out of each row of nmf.hidden
-        for irow in 0..nhidden {
-            let mut column = Vec::<f64>::new();
-            for icol in 0..nobserved {
-                column.push(ortho_nmf.hidden[(irow, icol)]);
+        if iteration % 10 == 0 {
+            println!("iteration = {} alpha = {}", iteration, alpha);
+
+            // read testimage out of each row of nmf.hidden
+            for irow in 0..nhidden {
+                let mut column = Vec::<f64>::new();
+                for icol in 0..nobserved {
+                    column.push(ortho_nmf.hidden[(irow, icol)]);
+                }
+                let image = DMat::<f64>::from_col_vec(10, 10, &column[..]);
+                // println!("image {}", irow);
+                // println!("{:?}", image);
+                magnify(image.normalize(), mag_factor).save_to_png(&format!("orthogonal-nmf-hidden-{}.png", irow)[..]).unwrap();
             }
-            let image = DMat::<f64>::from_col_vec(10, 10, &column[..]);
-            // println!("image {}", irow);
-            // println!("{:?}", image);
-            magnify(image.normalize(), mag_factor).save_to_png(&format!("orthogonal-nmf-hidden-{}.png", irow)[..]).unwrap();
         }
 
         iteration += 1;
