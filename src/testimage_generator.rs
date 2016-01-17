@@ -150,7 +150,7 @@ impl<'a, R, T, IH, IV> Iterator for ImgGen<'a, R, DMat<T>, IH, IV>
         result = result.clone() + (self.current_horizontal.clone() * random01(&mut self.rng))
             + (self.current_vertical.clone() * random01(&mut self.rng));
 
-        Some((self.ihorizontal, self.ivertical, i, result.normalize()))
+        Some((self.ihorizontal, self.ivertical, i, result))
     }
 }
 
