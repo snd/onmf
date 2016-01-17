@@ -18,6 +18,8 @@ const NSAMPLES: usize = 6 * 1000;
 const NOBSERVED: usize = 10 * 10;
 const NHIDDEN: usize = 20;
 
+// TODO use the functions in OrthogonalNMFBlas here directly
+
 #[bench]
 fn bench_ortho_nmf_weights_dividend_nalgebra(bencher: &mut test::Bencher) {
     let samples = DMat::<f64>::new_ones(NSAMPLES, NOBSERVED);
