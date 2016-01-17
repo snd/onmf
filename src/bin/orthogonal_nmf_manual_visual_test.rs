@@ -50,14 +50,9 @@ fn main() {
         // at iteration 232 alpha first goes above 1.0
         // iteration = 232 -> alpha = 1.005
         let alpha = 0.1 * 1.01.powi(iteration);
-        // TODO this could converge faster
+
+        // this does not converge:
         // let alpha = 0.1 * 1.0001.powi(iteration);
-
-        // let alpha = 0.1;
-
-        // TODO maybe try an even smaller alpha
-        // let alpha = 0.01;
-
 
         ortho_nmf.iterate(alpha, &mut data);
 
