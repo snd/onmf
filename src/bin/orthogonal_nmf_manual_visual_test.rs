@@ -14,6 +14,8 @@ use num::{Float};
 extern crate ndarray;
 use ndarray::ArrayBase;
 
+type FloatT = f32;
+
 fn main() {
     let mag_factor = 10;
 
@@ -28,11 +30,11 @@ fn main() {
     // let nhidden = 20 + steps;
     let nhidden = 40;
 
-    let mut data: ArrayBase<Vec<f64>, (usize, usize)> =
+    let mut data: ArrayBase<Vec<FloatT>, (usize, usize)> =
         ArrayBase::zeros((nsamples, nobserved));
 
     // write one testimage into each row of data
-    for (horizontal, vertical, i, factor) in testimage_generator::testimages::<f64, _>(per_step, &mut rng) {
+    for (horizontal, vertical, i, factor) in testimage_generator::testimages::<FloatT, _>(per_step, &mut rng) {
         let row = (horizontal + vertical) * i;
         for (col, val) in factor.as_vec().iter().enumerate() {
             data[(row, col)] = val.clone();
@@ -61,11 +63,11 @@ fn main() {
 
             // read testimage out of each row of nmf.hidden
             for irow in 0..nhidden {
-                let mut column = Vec::<f64>::new();
+                let mut column = Vec::<FloatT>::new();
                 for icol in 0..nobserved {
                     column.push(ortho_nmf.hidden[(irow, icol)]);
                 }
-                let image = DMat::<f64>::from_col_vec(10, 10, &column[..]);
+                let image = DMat::<FloatT>::from_col_vec(10, 10, &column[..]);
                 // println!("image {}", irow);
                 // println!("{:?}", image);
                 magnify(image.normalize(), mag_factor).save_to_png(&format!("orthogonal-nmf-hidden-{}.png", irow)[..]).unwrap();

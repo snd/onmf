@@ -15,7 +15,7 @@ pub trait ShapeAsTuple<T> {
     fn shape_as_tuple(&self) -> T;
 }
 
-pub type FloatT = f64;
+pub type FloatT = f32;
 
 impl<T> ShapeAsTuple<(usize, usize)> for ArrayBase<Vec<T>, (usize, usize)> {
     #[inline]
@@ -150,8 +150,8 @@ impl OrthogonalNMFBlas
 
     /// gamma is a symetric matrix with diagonal elements equal to zero
     /// and other elements = alpha
-    pub fn alpha_to_gamma(alpha: FloatT, nhidden: usize) -> ArrayBase<Vec<f64>, (usize, usize)> {
-        let mut gamma = ArrayBase::<Vec<f64>, (usize, usize)>::from_elem((nhidden, nhidden), alpha);
+    pub fn alpha_to_gamma(alpha: FloatT, nhidden: usize) -> ArrayBase<Vec<FloatT>, (usize, usize)> {
+        let mut gamma = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((nhidden, nhidden), alpha);
         for x in gamma.diag_mut().iter_mut() {
             *x = 0.
         }

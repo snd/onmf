@@ -42,9 +42,9 @@ macro_rules! bench_ortho_nmf_blas {
         let mut ortho_nmf = onmf::OrthogonalNMFBlas::init_random01(
             $nhidden, $nobserved, $nsamples, &mut rng);
 
-        let mut samples = ArrayBase::<Vec<f64>, (usize, usize)>::from_elem(($nsamples, $nobserved), 1.);
+        let mut samples = ArrayBase::<Vec<f32>, (usize, usize)>::from_elem(($nsamples, $nobserved), 1.);
 
-        let alpha: f64 = 0.1 * 1.01.powi(0);
+        let alpha: f32 = 0.1 * 1.01.powi(0);
         $bencher.iter(|| {
             ortho_nmf.iterate(alpha, &mut samples);
         });
