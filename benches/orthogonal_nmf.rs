@@ -12,6 +12,9 @@ use rand::{StdRng, SeedableRng};
 extern crate num;
 use num::{Float};
 
+extern crate ndarray;
+use ndarray::{ArrayBase};
+
 macro_rules! bench_ortho_nmf {
     ($bencher:expr, $float:ty, $nhidden:expr, $nobserved:expr, $nsamples:expr) => {{
         let seed: &[_] = &[1, 2, 3, 4];
@@ -29,6 +32,24 @@ macro_rules! bench_ortho_nmf {
     }}
 }
 
+macro_rules! bench_ortho_nmf_blas {
+    ($bencher:expr, $nhidden:expr, $nobserved:expr, $nsamples:expr) => {{
+        let seed: &[_] = &[1, 2, 3, 4];
+        let mut rng: StdRng = SeedableRng::from_seed(seed);
+
+        let mut ortho_nmf = onmf::OrthogonalNMFBlas::init_random01(
+            $nhidden, $nobserved, $nsamples, &mut rng);
+
+        let mut samples = ArrayBase::<Vec<f64>, (usize, usize)>::from_elem(($nsamples, $nobserved), 1.);
+
+        let alpha: f64 = 0.1 * 1.01.powi(0);
+        $bencher.iter(|| {
+            ortho_nmf.iterate(alpha, &mut samples);
+        });
+    }}
+}
+
+
 #[bench]
 fn bench_ortho_nmf_f64_10_256_11(bencher: &mut test::Bencher) {
     bench_ortho_nmf!(bencher, f64, 10, 256, 11);
@@ -36,6 +57,10 @@ fn bench_ortho_nmf_f64_10_256_11(bencher: &mut test::Bencher) {
 #[bench]
 fn bench_ortho_nmf_f32_10_256_11(bencher: &mut test::Bencher) {
     bench_ortho_nmf!(bencher, f32, 10, 256, 11);
+}
+#[bench]
+fn bench_ortho_nmf_blas_10_256_11(bencher: &mut test::Bencher) {
+    bench_ortho_nmf_blas!(bencher, 10, 256, 11);
 }
 
 #[bench]
@@ -46,6 +71,10 @@ fn bench_ortho_nmf_f64_10_256_20(bencher: &mut test::Bencher) {
 fn bench_ortho_nmf_f32_10_256_20(bencher: &mut test::Bencher) {
     bench_ortho_nmf!(bencher, f32, 10, 256, 20);
 }
+#[bench]
+fn bench_ortho_nmf_blas_10_256_20(bencher: &mut test::Bencher) {
+    bench_ortho_nmf_blas!(bencher, 10, 256, 20);
+}
 
 #[bench]
 fn bench_ortho_nmf_f64_10_256_30(bencher: &mut test::Bencher) {
@@ -54,6 +83,10 @@ fn bench_ortho_nmf_f64_10_256_30(bencher: &mut test::Bencher) {
 #[bench]
 fn bench_ortho_nmf_f32_10_256_30(bencher: &mut test::Bencher) {
     bench_ortho_nmf!(bencher, f32, 10, 256, 30);
+}
+#[bench]
+fn bench_ortho_nmf_blas_10_256_30(bencher: &mut test::Bencher) {
+    bench_ortho_nmf_blas!(bencher, 10, 256, 30);
 }
 
 #[bench]
@@ -64,6 +97,10 @@ fn bench_ortho_nmf_f64_10_512_11(bencher: &mut test::Bencher) {
 fn bench_ortho_nmf_f32_10_512_11(bencher: &mut test::Bencher) {
     bench_ortho_nmf!(bencher, f32, 10, 512, 11);
 }
+#[bench]
+fn bench_ortho_nmf_blas_10_512_11(bencher: &mut test::Bencher) {
+    bench_ortho_nmf_blas!(bencher, 10, 512, 11);
+}
 
 #[bench]
 fn bench_ortho_nmf_f64_20_512_30(bencher: &mut test::Bencher) {
@@ -72,4 +109,8 @@ fn bench_ortho_nmf_f64_20_512_30(bencher: &mut test::Bencher) {
 #[bench]
 fn bench_ortho_nmf_f32_20_512_30(bencher: &mut test::Bencher) {
     bench_ortho_nmf!(bencher, f32, 20, 512, 30);
+}
+#[bench]
+fn bench_ortho_nmf_blas_20_512_30(bencher: &mut test::Bencher) {
+    bench_ortho_nmf_blas!(bencher, 20, 512, 30);
 }
