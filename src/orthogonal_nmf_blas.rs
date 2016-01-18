@@ -137,6 +137,17 @@ impl OrthogonalNMFBlas
     /// `weights * hidden * hidden.transpose()`
     #[inline]
     pub fn update_weights_divisor(&mut self) {
+        // TODO weights * hidden which we compute first is really large
+        // we could first compute partial = hidden * hidden.transpose()
+        // partial.shape() = (nhidden, nhidden)
+        // and then in the second step compute
+        // weights * partial.
+        // however since we can't alias hidden we need to copy
+        // it for this.
+        // the question is whether the copying is faster than
+        // the larger matrix multiplication. i guess it is.
+        // TODO multiplying a matrix by its transpose is symetric
+        // can we exploit that ?
         Gemm::gemm(
             &1.,
             Transpose::NoTrans, &self.weights.blas(),
