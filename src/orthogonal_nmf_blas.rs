@@ -149,12 +149,14 @@ impl OrthogonalNMFBlas
         // the larger matrix multiplication. i guess it is.
         // TODO multiplying a matrix by its transpose is symetric
         // can we exploit that ?
+        // reconstruction <- weights * hidden
         Gemm::gemm(
             &1.,
             Transpose::NoTrans, &self.weights.blas(),
             Transpose::NoTrans, &self.hidden.blas(),
             &0.,
             &mut self.weights_divisor_reconstruction.blas());
+        // divisor <- reconstruction * hidden.transpose()
         Gemm::gemm(
             &1.,
             Transpose::NoTrans, &self.weights_divisor_reconstruction.blas(),
