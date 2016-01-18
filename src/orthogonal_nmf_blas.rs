@@ -165,7 +165,7 @@ impl OrthogonalNMFBlas
 
     /// `weights.transpose() * weights * hidden + alpha * gamma * hidden`
     #[inline]
-    pub fn iterate_hidden_divisor(&mut self, samples: &mut ArrayBase<Vec<FloatT>, (usize, usize)>, alpha: FloatT) {
+    pub fn iterate_hidden_divisor(&mut self, alpha: FloatT, samples: &mut ArrayBase<Vec<FloatT>, (usize, usize)>) {
         // we must make a copy here because we need two mutable
         // references to weights at the same time for .blas()
         // weights_copy.clone_from(&weights);
@@ -242,7 +242,7 @@ impl OrthogonalNMFBlas
         self.iterate_weights_dividend(samples);
         self.iterate_weights_divisor();
         self.iterate_hidden_dividend(samples);
-        self.iterate_hidden_divisor(samples, alpha);
+        self.iterate_hidden_divisor(alpha, samples);
 
         OrthogonalNMFBlas::update(
             &self.weights_dividend,
