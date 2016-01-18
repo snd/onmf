@@ -24,25 +24,25 @@ impl<T> ShapeAsTuple<(usize, usize)> for ArrayBase<Vec<T>, (usize, usize)> {
     }
 }
 
-// TODO Dimension type alias
-// TODO OwnedArray
+pub type Ix = (usize, usize);
+pub type MyMatrix = ArrayBase<Vec<FloatT>, Ix>;
 
 // TODO call this OrthoNMFBlas
 pub struct OrthogonalNMFBlas {
-    pub hidden: ArrayBase<Vec<FloatT>, (usize, usize)>,
-    pub weights: ArrayBase<Vec<FloatT>, (usize, usize)>,
+    pub hidden: MyMatrix,
+    pub weights: MyMatrix,
 
     // these hold temporary results during an iteration.
-    // kept in struct to prevent unnecessary memory allocations.
-    pub weights_dividend: ArrayBase<Vec<FloatT>, (usize, usize)>,
-    pub weights_divisor: ArrayBase<Vec<FloatT>, (usize, usize)>,
-    pub weights_divisor_reconstruction: ArrayBase<Vec<FloatT>, (usize, usize)>,
+    // kept in this struct to prevent unnecessary memory allocations.
+    pub weights_dividend: MyMatrix,
+    pub weights_divisor: MyMatrix,
+    pub weights_divisor_reconstruction: MyMatrix,
 
-    pub hidden_dividend: ArrayBase<Vec<FloatT>, (usize, usize)>,
-    pub hidden_divisor: ArrayBase<Vec<FloatT>, (usize, usize)>,
-    pub hidden_divisor_partial: ArrayBase<Vec<FloatT>, (usize, usize)>,
+    pub hidden_dividend: MyMatrix,
+    pub hidden_divisor: MyMatrix,
+    pub hidden_divisor_partial: MyMatrix,
 
-    pub gamma: ArrayBase<Vec<FloatT>, (usize, usize)>,
+    pub gamma: MyMatrix,
 }
 
 impl OrthogonalNMFBlas
@@ -51,15 +51,13 @@ impl OrthogonalNMFBlas
           // BlasArrayViewMut<'a, FloatT, (usize, usize)>: Matrix<FloatT>,
           // Closed01<FloatT>: Rand
 {
-    // TODO type alias for that ArrayBase stuff
-
     pub fn init_random01<R: Rng>(nhidden: usize, nobserved: usize, nsamples: usize, rng: &mut R) -> OrthogonalNMFBlas {
-        let mut hidden = ArrayBase::zeros((nhidden, nobserved));
+        let mut hidden = MyMatrix::zeros((nhidden, nobserved));
         for x in hidden.iter_mut() {
             *x = random01(rng);
         }
 
-        let mut weights = ArrayBase::zeros((nsamples, nhidden));
+        let mut weights = MyMatrix::zeros((nsamples, nhidden));
         for x in weights.iter_mut() {
             *x = random01(rng);
         }
@@ -68,7 +66,7 @@ impl OrthogonalNMFBlas
     }
 
     // TODO initialize with values from last time step t-1 instead of choosing randomly
-    pub fn init(hidden: ArrayBase<Vec<FloatT>, (usize, usize)>, weights: ArrayBase<Vec<FloatT>, (usize, usize)>) -> OrthogonalNMFBlas {
+    pub fn init(hidden: MyMatrix, weights: MyMatrix) -> OrthogonalNMFBlas {
         let weights_shape = weights.shape_as_tuple();
         let hidden_shape = hidden.shape_as_tuple();
 
@@ -81,12 +79,15 @@ impl OrthogonalNMFBlas
         OrthogonalNMFBlas {
             hidden: hidden,
             weights: weights,
-            weights_dividend: ArrayBase::zeros(weights_shape),
-            weights_divisor: ArrayBase::zeros(weights_shape),
-            weights_divisor_reconstruction: ArrayBase::zeros(samples_shape),
-            hidden_dividend: ArrayBase::zeros(hidden_shape),
-            hidden_divisor: ArrayBase::zeros(hidden_shape),
-            hidden_divisor_partial: ArrayBase::zeros((nhidden, nhidden)),
+
+            weights_dividend: MyMatrix::zeros(weights_shape),
+            weights_divisor: MyMatrix::zeros(weights_shape),
+            weights_divisor_reconstruction: MyMatrix::zeros(samples_shape),
+
+            hidden_dividend: MyMatrix::zeros(hidden_shape),
+            hidden_divisor: MyMatrix::zeros(hidden_shape),
+            hidden_divisor_partial: MyMatrix::zeros((nhidden, nhidden)),
+
             gamma: OrthogonalNMFBlas::gamma(nhidden),
         }
     }
@@ -115,8 +116,8 @@ impl OrthogonalNMFBlas
 
     /// gamma is a symetric matrix with diagonal elements equal to zero
     /// and other elements equal to 1
-    pub fn gamma(size: usize) -> ArrayBase<Vec<FloatT>, (usize, usize)> {
-        let mut gamma = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((size, size), 1.);
+    pub fn gamma(size: usize) -> MyMatrix {
+        let mut gamma = MyMatrix::from_elem((size, size), 1.);
         for x in gamma.diag_mut().iter_mut() {
             *x = 0.
         }
@@ -125,7 +126,7 @@ impl OrthogonalNMFBlas
 
     /// `samples * hidden.transpose()`
     #[inline]
-    pub fn iterate_weights_dividend(&mut self, samples: &mut ArrayBase<Vec<FloatT>, (usize, usize)>) {
+    pub fn iterate_weights_dividend(&mut self, samples: &mut MyMatrix) {
         Gemm::gemm(
             &1.,
             Transpose::NoTrans, &samples.blas(),
@@ -154,7 +155,7 @@ impl OrthogonalNMFBlas
 
     /// `weights.transpose() * samples`
     #[inline]
-    pub fn iterate_hidden_dividend(&mut self, samples: &mut ArrayBase<Vec<FloatT>, (usize, usize)>) {
+    pub fn iterate_hidden_dividend(&mut self, samples: &mut MyMatrix) {
         Gemm::gemm(
             &1.,
             Transpose::Trans, &self.weights.blas(),
@@ -169,8 +170,9 @@ impl OrthogonalNMFBlas
         // we must make a copy here because we need two mutable
         // references to weights at the same time for .blas()
         // weights_copy.clone_from(&weights);
-        // TODO is there away to prevent this
-        // maybe use clone_from here
+        // TODO this will be solved once
+        // https://github.com/bluss/rust-ndarray/pull/40
+        // is merged.
         let mut weights_copy = self.weights.clone();
         Gemm::gemm(
             &1.,
@@ -198,9 +200,9 @@ impl OrthogonalNMFBlas
     /// `result(i,j) <- result(i,j) * dividend(i,j) / divisor(i,j)`
     #[inline]
     pub fn update(
-        dividend: &ArrayBase<Vec<FloatT>, (usize, usize)>,
-        divisor: &ArrayBase<Vec<FloatT>, (usize, usize)>,
-        result: &mut ArrayBase<Vec<FloatT>, (usize, usize)>,
+        dividend: &MyMatrix,
+        divisor: &MyMatrix,
+        result: &mut MyMatrix,
     ) {
         let shape = result.shape_as_tuple();
         assert_eq!(shape, dividend.shape_as_tuple());
@@ -210,17 +212,17 @@ impl OrthogonalNMFBlas
             for col in 0..shape.1 {
                 let index = (row, col);
                 let mut div = unsafe { divisor.uget(index).clone() };
-                // if we have any zero in any of the matrizes
+                // if we have any 0 in any of the matrixes
                 // self.weights or self.hidden then
-                // divisor will be zero.
-                // we can't divide by zero
+                // divisor will be 0.
+                // we can't divide by 0.
+                // so we change them to the min positive value.
                 if FloatT::zero() == div {
                     div = FloatT::min_positive_value();
                 }
                 unsafe {
                     *result.uget_mut(index) *= dividend.uget(index) / div;
                 }
-                // TODO maybe also zero adjust the final weight
             }
         }
     }
@@ -231,14 +233,9 @@ impl OrthogonalNMFBlas
     /// it gets better and better with each iteration.
     /// one observed per column.
     /// one sample per row.
-    pub fn iterate(&mut self, alpha: FloatT, samples: &mut ArrayBase<Vec<FloatT>, (usize, usize)>) {
+    pub fn iterate(&mut self, alpha: FloatT, samples: &mut MyMatrix) {
         assert_eq!(samples.shape_as_tuple(), self.samples_shape());
 
-        // TODO benchmark these individually
-        // TODO add little descriptions like
-        // X <- X^T
-        // TODO also add them to docstrings
-        // TODO maybe pass in all data explicitely
         self.iterate_weights_dividend(samples);
         self.iterate_weights_divisor();
         self.iterate_hidden_dividend(samples);
