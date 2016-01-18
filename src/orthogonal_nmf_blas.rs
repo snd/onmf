@@ -41,6 +41,8 @@ pub struct OrthogonalNMFBlas {
     pub hidden_dividend: ArrayBase<Vec<FloatT>, (usize, usize)>,
     pub hidden_divisor: ArrayBase<Vec<FloatT>, (usize, usize)>,
     pub hidden_divisor_partial: ArrayBase<Vec<FloatT>, (usize, usize)>,
+
+    pub gamma: ArrayBase<Vec<FloatT>, (usize, usize)>,
 }
 
 impl OrthogonalNMFBlas
@@ -85,6 +87,7 @@ impl OrthogonalNMFBlas
             hidden_dividend: ArrayBase::zeros(hidden_shape),
             hidden_divisor: ArrayBase::zeros(hidden_shape),
             hidden_divisor_partial: ArrayBase::zeros((nhidden, nhidden)),
+            gamma: OrthogonalNMFBlas::gamma(nhidden),
         }
     }
 
@@ -151,9 +154,9 @@ impl OrthogonalNMFBlas
     }
 
     /// gamma is a symetric matrix with diagonal elements equal to zero
-    /// and other elements = alpha
-    pub fn alpha_to_gamma(alpha: FloatT, nhidden: usize) -> ArrayBase<Vec<FloatT>, (usize, usize)> {
-        let mut gamma = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((nhidden, nhidden), alpha);
+    /// and other elements equal to 1
+    pub fn gamma(size: usize) -> ArrayBase<Vec<FloatT>, (usize, usize)> {
+        let mut gamma = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((size, size), 1.);
         for x in gamma.diag_mut().iter_mut() {
             *x = 0.
         }
@@ -162,7 +165,7 @@ impl OrthogonalNMFBlas
 
     /// `weights.transpose() * weights * hidden + alpha * gamma * hidden`
     #[inline]
-    pub fn iterate_hidden_divisor(&mut self, samples: &mut ArrayBase<Vec<FloatT>, (usize, usize)>, gamma: &mut ArrayBase<Vec<FloatT>, (usize, usize)>) {
+    pub fn iterate_hidden_divisor(&mut self, samples: &mut ArrayBase<Vec<FloatT>, (usize, usize)>, alpha: FloatT) {
         // we must make a copy here because we need two mutable
         // references to weights at the same time for .blas()
         // weights_copy.clone_from(&weights);
@@ -176,8 +179,8 @@ impl OrthogonalNMFBlas
             &0.,
             &mut self.hidden_divisor_partial.blas());
         Gemm::gemm(
-            &1.,
-            Transpose::NoTrans, &gamma.blas(),
+            &alpha,
+            Transpose::NoTrans, &self.gamma.blas(),
             Transpose::NoTrans, &self.hidden.blas(),
             &0.,
             &mut self.hidden_divisor.blas());
@@ -239,9 +242,7 @@ impl OrthogonalNMFBlas
         self.iterate_weights_dividend(samples);
         self.iterate_weights_divisor();
         self.iterate_hidden_dividend(samples);
-        let mut gamma = OrthogonalNMFBlas::alpha_to_gamma(
-            alpha, self.nhidden());
-        self.iterate_hidden_divisor(samples, &mut gamma);
+        self.iterate_hidden_divisor(samples, alpha);
 
         OrthogonalNMFBlas::update(
             &self.weights_dividend,
