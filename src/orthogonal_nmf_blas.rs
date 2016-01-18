@@ -113,6 +113,16 @@ impl OrthogonalNMFBlas
         (self.nsamples(), self.nobserved())
     }
 
+    /// gamma is a symetric matrix with diagonal elements equal to zero
+    /// and other elements equal to 1
+    pub fn gamma(size: usize) -> ArrayBase<Vec<FloatT>, (usize, usize)> {
+        let mut gamma = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((size, size), 1.);
+        for x in gamma.diag_mut().iter_mut() {
+            *x = 0.
+        }
+        gamma
+    }
+
     /// `samples * hidden.transpose()`
     #[inline]
     pub fn iterate_weights_dividend(&mut self, samples: &mut ArrayBase<Vec<FloatT>, (usize, usize)>) {
@@ -151,16 +161,6 @@ impl OrthogonalNMFBlas
             Transpose::NoTrans, &samples.blas(),
             &0.,
             &mut self.hidden_dividend.blas());
-    }
-
-    /// gamma is a symetric matrix with diagonal elements equal to zero
-    /// and other elements equal to 1
-    pub fn gamma(size: usize) -> ArrayBase<Vec<FloatT>, (usize, usize)> {
-        let mut gamma = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((size, size), 1.);
-        for x in gamma.diag_mut().iter_mut() {
-            *x = 0.
-        }
-        gamma
     }
 
     /// `weights.transpose() * weights * hidden + alpha * gamma * hidden`
