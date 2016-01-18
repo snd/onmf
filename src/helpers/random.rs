@@ -1,6 +1,7 @@
 use rand::{Rng, Closed01, Rand};
 
 /// returns a random number between `0.` (inclusive) and `1.` (inclusive)
+#[inline]
 pub fn random01<T, R>(rng: &mut R) -> T
     where Closed01<T>: Rand,
           R: Rng
