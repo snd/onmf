@@ -27,13 +27,13 @@ impl<T> ShapeAsTuple<(usize, usize)> for ArrayBase<Vec<T>, (usize, usize)> {
 // TODO Dimension type alias
 // TODO OwnedArray
 
+// TODO call this OrthoNMFBlas
 pub struct OrthogonalNMFBlas {
     pub hidden: ArrayBase<Vec<FloatT>, (usize, usize)>,
     pub weights: ArrayBase<Vec<FloatT>, (usize, usize)>,
 
     // these hold temporary results during an iteration.
     // kept in struct to prevent unnecessary memory allocations.
-    // TODO dont call these tmp
     pub weights_dividend: ArrayBase<Vec<FloatT>, (usize, usize)>,
     pub weights_divisor: ArrayBase<Vec<FloatT>, (usize, usize)>,
     pub weights_divisor_reconstruction: ArrayBase<Vec<FloatT>, (usize, usize)>,
@@ -110,6 +110,7 @@ impl OrthogonalNMFBlas
         (self.nsamples(), self.nobserved())
     }
 
+    /// `samples * hidden.transpose()`
     #[inline]
     pub fn iterate_weights_dividend(&mut self, samples: &mut ArrayBase<Vec<FloatT>, (usize, usize)>) {
         Gemm::gemm(
@@ -121,7 +122,7 @@ impl OrthogonalNMFBlas
 
     }
 
-    // TODO docstring
+    /// `weights * hidden * hidden.transpose()`
     #[inline]
     pub fn iterate_weights_divisor(&mut self) {
         Gemm::gemm(
@@ -138,6 +139,7 @@ impl OrthogonalNMFBlas
             &mut self.weights_divisor.blas());
     }
 
+    /// `weights.transpose() * samples`
     #[inline]
     pub fn iterate_hidden_dividend(&mut self, samples: &mut ArrayBase<Vec<FloatT>, (usize, usize)>) {
         Gemm::gemm(
@@ -158,6 +160,7 @@ impl OrthogonalNMFBlas
         gamma
     }
 
+    /// `weights.transpose() * weights * hidden + alpha * gamma * hidden`
     #[inline]
     pub fn iterate_hidden_divisor(&mut self, samples: &mut ArrayBase<Vec<FloatT>, (usize, usize)>, gamma: &mut ArrayBase<Vec<FloatT>, (usize, usize)>) {
         // we must make a copy here because we need two mutable
@@ -189,6 +192,7 @@ impl OrthogonalNMFBlas
 
     // TODO better name
     // per element division
+    /// `result(i,j) <- result(i,j) * dividend(i,j) / divisor(i,j)`
     #[inline]
     pub fn update(
         dividend: &ArrayBase<Vec<FloatT>, (usize, usize)>,
