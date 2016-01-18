@@ -53,6 +53,18 @@ fn bench_ortho_nmf_weights_dividend_rblas(bencher: &mut test::Bencher) {
 }
 
 #[bench]
+fn bench_ortho_nmf_weights_dividend_rblas2(bencher: &mut test::Bencher) {
+    let seed: &[_] = &[1, 2, 3, 4];
+    let mut rng: StdRng = SeedableRng::from_seed(seed);
+    let mut samples = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((NSAMPLES, NOBSERVED), 1.);
+    let mut ortho_nmf = onmf::OrthogonalNMFBlas::init_random01(
+        NHIDDEN, NOBSERVED, NSAMPLES, &mut rng);
+    bencher.iter(|| {
+        ortho_nmf.iterate_weights_dividend(&mut samples);
+    });
+}
+
+#[bench]
 fn bench_ortho_nmf_weights_divisor_nalgebra(bencher: &mut test::Bencher) {
     let weights = DMat::<FloatT>::new_ones(NSAMPLES, NHIDDEN);
     let hidden = DMat::<FloatT>::new_ones(NHIDDEN, NOBSERVED);
