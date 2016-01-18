@@ -134,6 +134,7 @@ impl OrthogonalNMFBlas
 
     }
 
+    // TODO this is the slowest
     /// `weights * hidden * hidden.transpose()`
     #[inline]
     pub fn update_weights_divisor(&mut self) {
@@ -173,28 +174,28 @@ impl OrthogonalNMFBlas
             &mut self.hidden_multiplier.blas());
     }
 
+    // surprisingly this is the fastest
     /// `weights.transpose() * weights * hidden + alpha * gamma * hidden`
     #[inline]
     pub fn update_hidden_divisor(&mut self, alpha: FloatT) {
-        // we must make a copy here because we need two mutable
-        // references to weights at the same time for .blas()
-        // weights_copy.clone_from(&weights);
-        // TODO this will be solved once
-        // https://github.com/bluss/rust-ndarray/pull/40
-        // is merged.
+        // TODO benchmark whether using clone_from is faster
         let mut weights_copy = self.weights.clone();
+        // partial <- weights.transpose() * weights
         Gemm::gemm(
             &1.,
             Transpose::Trans, &self.weights.blas(),
             Transpose::NoTrans, &weights_copy.blas(),
             &0.,
             &mut self.hidden_divisor_partial.blas());
+        // partial.shape() = (nhidden, nhidden) very small
+        // divisor <- alpha * gamma * hidden
         Gemm::gemm(
             &alpha,
             Transpose::NoTrans, &self.gamma.blas(),
             Transpose::NoTrans, &self.hidden.blas(),
             &0.,
             &mut self.hidden_divisor.blas());
+        // divisor <- divisor + partial * hidden
         Gemm::gemm(
             &1.,
             Transpose::NoTrans, &self.hidden_divisor_partial.blas(),
