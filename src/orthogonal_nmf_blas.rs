@@ -236,15 +236,24 @@ impl OrthogonalNMFBlas
     pub fn iterate(&mut self, alpha: FloatT, samples: &mut MyMatrix) {
         assert_eq!(samples.shape_as_tuple(), self.samples_shape());
 
+        // weights_dividend <- samples * hidden.transpose()
         self.iterate_weights_dividend(samples);
+        // weights_divisor <- weights * hidden * hidden.transpose()
         self.iterate_weights_divisor();
+        // hidden_dividend <- weights.transpose() * samples
         self.iterate_hidden_dividend(samples);
+        // hidden_divisor <-
+        // weights.transpose() * weights * hidden + alpha * gamma * hidden
         self.iterate_hidden_divisor(alpha);
 
+        // weights(i,j) <-
+        // weights(i,j) * weights_dividend(i,j) / weights_divisor(i,j)
         OrthogonalNMFBlas::update(
             &self.weights_dividend,
             &self.weights_divisor,
             &mut self.weights);
+        // hidden(i,j) <-
+        // hidden(i,j) * hidden_dividend(i,j) / hidden_divisor(i,j)
         OrthogonalNMFBlas::update(
             &self.hidden_dividend,
             &self.hidden_divisor,
