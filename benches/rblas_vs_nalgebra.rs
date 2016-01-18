@@ -28,7 +28,7 @@ const NHIDDEN: usize = 20;
 type FloatT = f32;
 
 #[bench]
-fn bench_ortho_nmf_weights_dividend_nalgebra(bencher: &mut test::Bencher) {
+fn bench_ortho_nmf_weights_multiplier_nalgebra(bencher: &mut test::Bencher) {
     let samples = DMat::<FloatT>::new_ones(NSAMPLES, NOBSERVED);
     let hidden = DMat::<FloatT>::new_ones(NHIDDEN, NOBSERVED);
     bencher.iter(|| {
@@ -37,7 +37,7 @@ fn bench_ortho_nmf_weights_dividend_nalgebra(bencher: &mut test::Bencher) {
 }
 
 #[bench]
-fn bench_ortho_nmf_weights_dividend_rblas(bencher: &mut test::Bencher) {
+fn bench_ortho_nmf_weights_multiplier_rblas(bencher: &mut test::Bencher) {
     let mut samples = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((NSAMPLES, NOBSERVED), 1.);
     let mut hidden = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((NHIDDEN, NOBSERVED), 1.);
     bencher.iter(|| {
@@ -53,14 +53,14 @@ fn bench_ortho_nmf_weights_dividend_rblas(bencher: &mut test::Bencher) {
 }
 
 #[bench]
-fn bench_ortho_nmf_weights_dividend_rblas2(bencher: &mut test::Bencher) {
+fn bench_ortho_nmf_weights_multiplier_rblas2(bencher: &mut test::Bencher) {
     let seed: &[_] = &[1, 2, 3, 4];
     let mut rng: StdRng = SeedableRng::from_seed(seed);
     let mut samples = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((NSAMPLES, NOBSERVED), 1.);
-    let mut ortho_nmf = onmf::OrthogonalNMFBlas::init_random01(
+    let mut ortho_nmf = onmf::OrthogonalNMFBlas::new_random01(
         NHIDDEN, NOBSERVED, NSAMPLES, &mut rng);
     bencher.iter(|| {
-        ortho_nmf.iterate_weights_dividend(&mut samples);
+        ortho_nmf.update_weights_multiplier(&mut samples);
     });
 }
 
@@ -97,7 +97,7 @@ fn bench_ortho_nmf_weights_divisor_rblas(bencher: &mut test::Bencher) {
 }
 
 #[bench]
-fn bench_ortho_nmf_hidden_dividend_nalgebra(bencher: &mut test::Bencher) {
+fn bench_ortho_nmf_hidden_multiplier_nalgebra(bencher: &mut test::Bencher) {
     let weights = DMat::<FloatT>::new_ones(NSAMPLES, NHIDDEN);
     let samples = DMat::<FloatT>::new_ones(NSAMPLES, NOBSERVED);
     bencher.iter(|| {
@@ -106,7 +106,7 @@ fn bench_ortho_nmf_hidden_dividend_nalgebra(bencher: &mut test::Bencher) {
 }
 
 #[bench]
-fn bench_ortho_nmf_hidden_dividend_rblas(bencher: &mut test::Bencher) {
+fn bench_ortho_nmf_hidden_multiplier_rblas(bencher: &mut test::Bencher) {
     let mut weights = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((NSAMPLES, NHIDDEN), 1.);
     let mut samples = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((NSAMPLES, NOBSERVED), 1.);
     bencher.iter(|| {

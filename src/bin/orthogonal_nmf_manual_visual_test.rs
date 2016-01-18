@@ -42,7 +42,7 @@ fn main() {
     }
 
     // let mut ortho_nmf = onmf::OrthogonalNMF::<f64>::init_random01(
-    let mut ortho_nmf = onmf::OrthogonalNMFBlas::init_random01(
+    let mut ortho_nmf = onmf::OrthogonalNMFBlas::new_random01(
         nhidden, nobserved, nsamples, &mut rng);
 
     let mut iteration: i32 = 0;

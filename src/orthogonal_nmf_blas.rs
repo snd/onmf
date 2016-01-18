@@ -27,18 +27,17 @@ impl<T> ShapeAsTuple<(usize, usize)> for ArrayBase<Vec<T>, (usize, usize)> {
 pub type Ix = (usize, usize);
 pub type MyMatrix = ArrayBase<Vec<FloatT>, Ix>;
 
-// TODO call this OrthoNMFBlas
 pub struct OrthogonalNMFBlas {
     pub hidden: MyMatrix,
     pub weights: MyMatrix,
 
     // these hold temporary results during an iteration.
     // kept in this struct to prevent unnecessary memory allocations.
-    pub weights_dividend: MyMatrix,
+    pub weights_multiplier: MyMatrix,
     pub weights_divisor: MyMatrix,
     pub weights_divisor_reconstruction: MyMatrix,
 
-    pub hidden_dividend: MyMatrix,
+    pub hidden_multiplier: MyMatrix,
     pub hidden_divisor: MyMatrix,
     pub hidden_divisor_partial: MyMatrix,
 
@@ -51,7 +50,7 @@ impl OrthogonalNMFBlas
           // BlasArrayViewMut<'a, FloatT, (usize, usize)>: Matrix<FloatT>,
           // Closed01<FloatT>: Rand
 {
-    pub fn init_random01<R: Rng>(nhidden: usize, nobserved: usize, nsamples: usize, rng: &mut R) -> OrthogonalNMFBlas {
+    pub fn new_random01<R: Rng>(nhidden: usize, nobserved: usize, nsamples: usize, rng: &mut R) -> OrthogonalNMFBlas {
         let mut hidden = MyMatrix::zeros((nhidden, nobserved));
         for x in hidden.iter_mut() {
             *x = random01(rng);
@@ -62,11 +61,10 @@ impl OrthogonalNMFBlas
             *x = random01(rng);
         }
 
-        Self::init(hidden, weights)
+        Self::new(hidden, weights)
     }
 
-    // TODO initialize with values from last time step t-1 instead of choosing randomly
-    pub fn init(hidden: MyMatrix, weights: MyMatrix) -> OrthogonalNMFBlas {
+    pub fn new(hidden: MyMatrix, weights: MyMatrix) -> OrthogonalNMFBlas {
         let weights_shape = weights.shape_as_tuple();
         let hidden_shape = hidden.shape_as_tuple();
 
@@ -80,11 +78,11 @@ impl OrthogonalNMFBlas
             hidden: hidden,
             weights: weights,
 
-            weights_dividend: MyMatrix::zeros(weights_shape),
+            weights_multiplier: MyMatrix::zeros(weights_shape),
             weights_divisor: MyMatrix::zeros(weights_shape),
             weights_divisor_reconstruction: MyMatrix::zeros(samples_shape),
 
-            hidden_dividend: MyMatrix::zeros(hidden_shape),
+            hidden_multiplier: MyMatrix::zeros(hidden_shape),
             hidden_divisor: MyMatrix::zeros(hidden_shape),
             hidden_divisor_partial: MyMatrix::zeros((nhidden, nhidden)),
 
@@ -126,19 +124,19 @@ impl OrthogonalNMFBlas
 
     /// `samples * hidden.transpose()`
     #[inline]
-    pub fn iterate_weights_dividend(&mut self, samples: &mut MyMatrix) {
+    pub fn update_weights_multiplier(&mut self, samples: &mut MyMatrix) {
         Gemm::gemm(
             &1.,
             Transpose::NoTrans, &samples.blas(),
             Transpose::Trans, &self.hidden.blas(),
             &0.,
-            &mut self.weights_dividend.blas());
+            &mut self.weights_multiplier.blas());
 
     }
 
     /// `weights * hidden * hidden.transpose()`
     #[inline]
-    pub fn iterate_weights_divisor(&mut self) {
+    pub fn update_weights_divisor(&mut self) {
         Gemm::gemm(
             &1.,
             Transpose::NoTrans, &self.weights.blas(),
@@ -155,18 +153,18 @@ impl OrthogonalNMFBlas
 
     /// `weights.transpose() * samples`
     #[inline]
-    pub fn iterate_hidden_dividend(&mut self, samples: &mut MyMatrix) {
+    pub fn update_hidden_multiplier(&mut self, samples: &mut MyMatrix) {
         Gemm::gemm(
             &1.,
             Transpose::Trans, &self.weights.blas(),
             Transpose::NoTrans, &samples.blas(),
             &0.,
-            &mut self.hidden_dividend.blas());
+            &mut self.hidden_multiplier.blas());
     }
 
     /// `weights.transpose() * weights * hidden + alpha * gamma * hidden`
     #[inline]
-    pub fn iterate_hidden_divisor(&mut self, alpha: FloatT) {
+    pub fn update_hidden_divisor(&mut self, alpha: FloatT) {
         // we must make a copy here because we need two mutable
         // references to weights at the same time for .blas()
         // weights_copy.clone_from(&weights);
@@ -195,17 +193,15 @@ impl OrthogonalNMFBlas
             &mut self.hidden_divisor.blas());
     }
 
-    // TODO better name
-    // per element division
-    /// `result(i,j) <- result(i,j) * dividend(i,j) / divisor(i,j)`
+    /// `result(i,j) <- result(i,j) * multiplier(i,j) / divisor(i,j)`
     #[inline]
-    pub fn update(
-        dividend: &MyMatrix,
+    pub fn update_from_multiplier_and_divisor(
+        multiplier: &MyMatrix,
         divisor: &MyMatrix,
         result: &mut MyMatrix,
     ) {
         let shape = result.shape_as_tuple();
-        assert_eq!(shape, dividend.shape_as_tuple());
+        assert_eq!(shape, multiplier.shape_as_tuple());
         assert_eq!(shape, divisor.shape_as_tuple());
 
         for row in 0..shape.0 {
@@ -221,7 +217,7 @@ impl OrthogonalNMFBlas
                     div = FloatT::min_positive_value();
                 }
                 unsafe {
-                    *result.uget_mut(index) *= dividend.uget(index) / div;
+                    *result.uget_mut(index) *= multiplier.uget(index) / div;
                 }
             }
         }
@@ -230,32 +226,33 @@ impl OrthogonalNMFBlas
     // TODO consider calling this something like iteration_step
     // TODO how many iterations ?
     // TODO compare this to the seoung solution
-    /// it gets better and better with each iteration.
-    /// one observed per column.
-    /// one sample per row.
+    /// does one iteration step.
+    /// `weights` and `hidden` get better and better with each iteration.
+    /// usually around `10000` iterations are required.
+    /// `samples` contains one observed per column, one sample per row.
     pub fn iterate(&mut self, alpha: FloatT, samples: &mut MyMatrix) {
         assert_eq!(samples.shape_as_tuple(), self.samples_shape());
 
-        // weights_dividend <- samples * hidden.transpose()
-        self.iterate_weights_dividend(samples);
+        // weights_multiplier <- samples * hidden.transpose()
+        self.update_weights_multiplier(samples);
         // weights_divisor <- weights * hidden * hidden.transpose()
-        self.iterate_weights_divisor();
-        // hidden_dividend <- weights.transpose() * samples
-        self.iterate_hidden_dividend(samples);
+        self.update_weights_divisor();
+        // hidden_multiplier <- weights.transpose() * samples
+        self.update_hidden_multiplier(samples);
         // hidden_divisor <-
         // weights.transpose() * weights * hidden + alpha * gamma * hidden
-        self.iterate_hidden_divisor(alpha);
+        self.update_hidden_divisor(alpha);
 
         // weights(i,j) <-
-        // weights(i,j) * weights_dividend(i,j) / weights_divisor(i,j)
-        OrthogonalNMFBlas::update(
-            &self.weights_dividend,
+        // weights(i,j) * weights_multiplier(i,j) / weights_divisor(i,j)
+        OrthogonalNMFBlas::update_from_multiplier_and_divisor(
+            &self.weights_multiplier,
             &self.weights_divisor,
             &mut self.weights);
         // hidden(i,j) <-
-        // hidden(i,j) * hidden_dividend(i,j) / hidden_divisor(i,j)
-        OrthogonalNMFBlas::update(
-            &self.hidden_dividend,
+        // hidden(i,j) * hidden_multiplier(i,j) / hidden_divisor(i,j)
+        OrthogonalNMFBlas::update_from_multiplier_and_divisor(
+            &self.hidden_multiplier,
             &self.hidden_divisor,
             &mut self.hidden);
     }

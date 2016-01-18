@@ -39,7 +39,7 @@ macro_rules! bench_ortho_nmf_blas {
         let seed: &[_] = &[1, 2, 3, 4];
         let mut rng: StdRng = SeedableRng::from_seed(seed);
 
-        let mut ortho_nmf = onmf::OrthogonalNMFBlas::init_random01(
+        let mut ortho_nmf = onmf::OrthogonalNMFBlas::new_random01(
             $nhidden, $nobserved, $nsamples, &mut rng);
 
         let mut samples = ArrayBase::<Vec<f32>, (usize, usize)>::from_elem(($nsamples, $nobserved), 1.);
