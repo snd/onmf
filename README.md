@@ -2,7 +2,7 @@
 
 *status: early work in progress. still figuring this out. code still somewhat messy. api still in flux.*
 
-fast implementation of online [nonnegative matrix factorization](https://en.wikipedia.org/wiki/Non-negative_matrix_factorization) as
+fast [rust](https://www.rust-lang.org/) implementation of online [nonnegative matrix factorization](https://en.wikipedia.org/wiki/Non-negative_matrix_factorization) as
 laid out in the paper [*detect and track latent factors with online nonnegative matrix factorization*](https://www.researchgate.net/publication/220811919_Detect_and_Track_Latent_Factors_with_Online_Nonnegative_Matrix_Factorization).
 
 - [x] testimage generator for testing NMF
