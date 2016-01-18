@@ -14,16 +14,23 @@ extern crate ndarray;
 use ndarray::ArrayBase;
 use ndarray::blas::AsBlas;
 
+extern crate rand;
+use rand::{StdRng, SeedableRng};
+
+extern crate onmf;
+
 const NSAMPLES: usize = 6 * 1000;
 const NOBSERVED: usize = 10 * 10;
 const NHIDDEN: usize = 20;
 
 // TODO use the functions in OrthogonalNMFBlas here directly
 
+type FloatT = f32;
+
 #[bench]
 fn bench_ortho_nmf_weights_dividend_nalgebra(bencher: &mut test::Bencher) {
-    let samples = DMat::<f64>::new_ones(NSAMPLES, NOBSERVED);
-    let hidden = DMat::<f64>::new_ones(NHIDDEN, NOBSERVED);
+    let samples = DMat::<FloatT>::new_ones(NSAMPLES, NOBSERVED);
+    let hidden = DMat::<FloatT>::new_ones(NHIDDEN, NOBSERVED);
     bencher.iter(|| {
         samples.clone().mul(hidden.transpose())
     });
@@ -31,10 +38,10 @@ fn bench_ortho_nmf_weights_dividend_nalgebra(bencher: &mut test::Bencher) {
 
 #[bench]
 fn bench_ortho_nmf_weights_dividend_rblas(bencher: &mut test::Bencher) {
-    let mut samples = ArrayBase::<Vec<f64>, (usize, usize)>::from_elem((NSAMPLES, NOBSERVED), 1.);
-    let mut hidden = ArrayBase::<Vec<f64>, (usize, usize)>::from_elem((NHIDDEN, NOBSERVED), 1.);
+    let mut samples = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((NSAMPLES, NOBSERVED), 1.);
+    let mut hidden = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((NHIDDEN, NOBSERVED), 1.);
     bencher.iter(|| {
-        let mut result = ArrayBase::<Vec<f64>, (usize, usize)>::from_elem((NSAMPLES, NHIDDEN), 1.);
+        let mut result = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((NSAMPLES, NHIDDEN), 1.);
         Gemm::gemm(
             &1.,
             BlasTranspose::NoTrans, &samples.blas(),
@@ -47,8 +54,8 @@ fn bench_ortho_nmf_weights_dividend_rblas(bencher: &mut test::Bencher) {
 
 #[bench]
 fn bench_ortho_nmf_weights_divisor_nalgebra(bencher: &mut test::Bencher) {
-    let weights = DMat::<f64>::new_ones(NSAMPLES, NHIDDEN);
-    let hidden = DMat::<f64>::new_ones(NHIDDEN, NOBSERVED);
+    let weights = DMat::<FloatT>::new_ones(NSAMPLES, NHIDDEN);
+    let hidden = DMat::<FloatT>::new_ones(NHIDDEN, NOBSERVED);
     bencher.iter(|| {
         weights.clone().mul(&hidden).mul(hidden.transpose())
     });
@@ -56,11 +63,11 @@ fn bench_ortho_nmf_weights_divisor_nalgebra(bencher: &mut test::Bencher) {
 
 #[bench]
 fn bench_ortho_nmf_weights_divisor_rblas(bencher: &mut test::Bencher) {
-    let mut weights = ArrayBase::<Vec<f64>, (usize, usize)>::from_elem((NSAMPLES, NHIDDEN), 1.);
-    let mut hidden = ArrayBase::<Vec<f64>, (usize, usize)>::from_elem((NHIDDEN, NOBSERVED), 1.);
-    let mut reconstruction = ArrayBase::<Vec<f64>, (usize, usize)>::from_elem((NSAMPLES, NOBSERVED), 1.);
+    let mut weights = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((NSAMPLES, NHIDDEN), 1.);
+    let mut hidden = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((NHIDDEN, NOBSERVED), 1.);
+    let mut reconstruction = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((NSAMPLES, NOBSERVED), 1.);
     bencher.iter(|| {
-        let mut result = ArrayBase::<Vec<f64>, (usize, usize)>::from_elem((NSAMPLES, NHIDDEN), 1.);
+        let mut result = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((NSAMPLES, NHIDDEN), 1.);
         Gemm::gemm(
             &1.,
             BlasTranspose::NoTrans, &weights.blas(),
@@ -79,8 +86,8 @@ fn bench_ortho_nmf_weights_divisor_rblas(bencher: &mut test::Bencher) {
 
 #[bench]
 fn bench_ortho_nmf_hidden_dividend_nalgebra(bencher: &mut test::Bencher) {
-    let weights = DMat::<f64>::new_ones(NSAMPLES, NHIDDEN);
-    let samples = DMat::<f64>::new_ones(NSAMPLES, NOBSERVED);
+    let weights = DMat::<FloatT>::new_ones(NSAMPLES, NHIDDEN);
+    let samples = DMat::<FloatT>::new_ones(NSAMPLES, NOBSERVED);
     bencher.iter(|| {
         weights.transpose().mul(&samples);
     });
@@ -88,10 +95,10 @@ fn bench_ortho_nmf_hidden_dividend_nalgebra(bencher: &mut test::Bencher) {
 
 #[bench]
 fn bench_ortho_nmf_hidden_dividend_rblas(bencher: &mut test::Bencher) {
-    let mut weights = ArrayBase::<Vec<f64>, (usize, usize)>::from_elem((NSAMPLES, NHIDDEN), 1.);
-    let mut samples = ArrayBase::<Vec<f64>, (usize, usize)>::from_elem((NSAMPLES, NOBSERVED), 1.);
+    let mut weights = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((NSAMPLES, NHIDDEN), 1.);
+    let mut samples = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((NSAMPLES, NOBSERVED), 1.);
     bencher.iter(|| {
-        let mut result = ArrayBase::<Vec<f64>, (usize, usize)>::from_elem((NHIDDEN, NOBSERVED), 1.);
+        let mut result = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((NHIDDEN, NOBSERVED), 1.);
         Gemm::gemm(
             &1.,
             BlasTranspose::Trans, &weights.blas(),
@@ -107,11 +114,11 @@ fn bench_ortho_nmf_hidden_dividend_rblas(bencher: &mut test::Bencher) {
 // is the clone so expensive ?
 #[bench]
 fn bench_ortho_nmf_hidden_divisor_nalgebra(bencher: &mut test::Bencher) {
-    let weights = DMat::<f64>::new_ones(NSAMPLES, NHIDDEN);
-    let hidden = DMat::<f64>::new_ones(NHIDDEN, NOBSERVED);
+    let weights = DMat::<FloatT>::new_ones(NSAMPLES, NHIDDEN);
+    let hidden = DMat::<FloatT>::new_ones(NHIDDEN, NOBSERVED);
     bencher.iter(|| {
         // TODO this is surprisingly weirdly fast
-        let gamma = DMat::<f64>::new_ones(NHIDDEN, NHIDDEN);
+        let gamma = DMat::<FloatT>::new_ones(NHIDDEN, NHIDDEN);
         weights.transpose().mul(&weights).mul(&hidden)
             .add(gamma.mul(&hidden))
     });
@@ -119,14 +126,14 @@ fn bench_ortho_nmf_hidden_divisor_nalgebra(bencher: &mut test::Bencher) {
 
 #[bench]
 fn bench_ortho_nmf_hidden_divisor_rblas(bencher: &mut test::Bencher) {
-    let mut weights = ArrayBase::<Vec<f64>, (usize, usize)>::from_elem((NSAMPLES, NHIDDEN), 1.);
-    let mut weights_copy = ArrayBase::<Vec<f64>, (usize, usize)>::from_elem((NSAMPLES, NHIDDEN), 1.);
-    let mut hidden = ArrayBase::<Vec<f64>, (usize, usize)>::from_elem((NHIDDEN, NOBSERVED), 1.);
-    let mut gamma = ArrayBase::<Vec<f64>, (usize, usize)>::from_elem((NHIDDEN, NHIDDEN), 1.);
+    let mut weights = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((NSAMPLES, NHIDDEN), 1.);
+    let mut weights_copy = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((NSAMPLES, NHIDDEN), 1.);
+    let mut hidden = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((NHIDDEN, NOBSERVED), 1.);
+    let mut gamma = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((NHIDDEN, NHIDDEN), 1.);
     // this is really small
-    let mut tmp = ArrayBase::<Vec<f64>, (usize, usize)>::from_elem((NHIDDEN, NHIDDEN), 1.);
+    let mut tmp = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((NHIDDEN, NHIDDEN), 1.);
     bencher.iter(|| {
-        let mut result = ArrayBase::<Vec<f64>, (usize, usize)>::from_elem((NHIDDEN, NOBSERVED), 1.);
+        let mut result = ArrayBase::<Vec<FloatT>, (usize, usize)>::from_elem((NHIDDEN, NOBSERVED), 1.);
         // we must make a copy here because we need two mutable
         // references to weights at the same time for .blas()
         // weights_copy.clone_from(&weights);
