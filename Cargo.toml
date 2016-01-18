@@ -9,6 +9,7 @@ name = "onmf"
 readme = "README.md"
 repository = "https://github.com/snd/onmf.git"
 version = "0.1.0"
+build = "build.rs"
 
 [dependencies]
 image = "0.6.1"
