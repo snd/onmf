@@ -122,6 +122,10 @@ impl OrthogonalNMFBlas
         gamma
     }
 
+    // TODO call these `set` or something similar because
+    // opposed to `update_from_multiplier_and_divisor` these
+    // don't adjust but change entirely
+
     /// `samples * hidden.transpose()`
     #[inline]
     pub fn update_weights_multiplier(&mut self, samples: &mut MyMatrix) {
