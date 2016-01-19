@@ -51,6 +51,7 @@ impl OrthogonalNMFBlas
           // Closed01<FloatT>: Rand
 {
     pub fn new_random01<R: Rng>(nhidden: usize, nobserved: usize, nsamples: usize, rng: &mut R) -> OrthogonalNMFBlas {
+        // TODO potentially add some assertions
         let mut hidden = MyMatrix::zeros((nhidden, nobserved));
         for x in hidden.iter_mut() {
             *x = random01(rng);
@@ -65,10 +66,11 @@ impl OrthogonalNMFBlas
     }
 
     pub fn new(hidden: MyMatrix, weights: MyMatrix) -> OrthogonalNMFBlas {
-        let weights_shape = weights.shape_as_tuple();
         let hidden_shape = hidden.shape_as_tuple();
-
         let nhidden = hidden_shape.0;
+        let weights_shape = weights.shape_as_tuple();
+        assert!(weights_shape.1 == nhidden, "row count of hidden must be equal to column count of weights");
+
         let nobserved = hidden_shape.1;
         let nsamples = weights_shape.0;
 
