@@ -146,6 +146,7 @@ in fact this is the only way to make them compatible !
 
 so we take the dot products of the rows of `samples`
 and the cols of `hidden.transposed()` (meaning the rows of `hidden`)
+along `nobserved`.
 
 the rows of `samples` encode the observed vectors.
 
@@ -162,7 +163,15 @@ this models a desirable property.
 
 ### `hidden_multiplier <- weights.transpose() * samples`
 
-this is pretty much analogous to `weights_multiplier <- samples * hidden.transposed()`.
+here we take the dot product of the columns of `weights` and the `columns of samples`.
+along `nsamples`.
+
+output: how well (`> 1`) or poorly (`< 1`) do the `weights` model the `samples` for every
+combination of `nhidden` and `nobserved`.
+
+this is later used to adjust the hidden accordingly.
+
+`output.shape = (nhidden, nobserved)`
 
 again we transpose to make the shapes compatible.
 
@@ -183,3 +192,7 @@ values `> 1` reduce the `weights` and values `< 1` increase the weights.
 so this has to model something we don't want.
 
 i suppose it has to do with orthogonalization.
+
+again we transpose to make the shapes compatible.
+
+`weights * hidden` reconstructs `samples`.
