@@ -209,4 +209,12 @@ combination of `nhidden` and `nsamples`.**
 
 ### `hidden_divisor <- weights.transpose() * weights * hidden + alpha * gamma * hidden`
 
-divisor the `+ alpha * gamma * hidden` part is responsible for the orthogonalization.
+the `+ alpha * gamma * hidden` part is responsible for the orthogonalization.
+
+`gamma` cuts out itself
+
+what does gamma do to hidden ?
+
+what is the role of `alpha` here ?
+
+`alpha` = how much hidden without each vector itself to remove for each vector
