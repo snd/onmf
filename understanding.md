@@ -144,13 +144,13 @@ columns of `W` store coefficients for combining the rows of `H`
 otherwise their shapes are incompatible.
 in fact this is the only way to make them compatible !
 
-so we take the dot products of the rows of `samples`
-and the cols of `hidden.transposed()` (meaning the rows of `hidden`)
-along `nobserved`.
+so we take the dot products of the columns of `samples`
+and the rows of `hidden.transposed()` (meaning the columns of `hidden`)
+sum along `nobserved`.
 
 the rows of `samples` encode the observed vectors.
 
-the rows of `hidden` encode the 
+the rows of `hidden` encode the base vectors.
 
 **THIS: we can think of `weights_multiplier` as reinforcing those weights where the `hidden` variable
 vectors are correctly aligned with the observed `samples`.
@@ -163,15 +163,15 @@ this models a desirable property.
 
 ### `hidden_multiplier <- weights.transpose() * samples`
 
-here we take the dot product of the columns of `weights` and the `columns of samples`.
+here we take the dot product of the rows of `weights` and the `rows of samples`.
 along `nsamples`.
 
 output: how well (`> 1`) or poorly (`< 1`) do the `weights` model the `samples` for every
 combination of `nhidden` and `nobserved`.
 
-this is later used to adjust the hidden accordingly.
-
 `output.shape = (nhidden, nobserved)`
+
+this is later used to adjust the hidden accordingly.
 
 again we transpose to make the shapes compatible.
 
