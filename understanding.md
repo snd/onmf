@@ -127,6 +127,12 @@ the rows of the
 columns of `W` store coefficients for combining the rows of `H`
 
 
+
+a good factorization is reinforced.
+a bad factorization is diminished.
+
+think of it as values moving from cells to other cells.
+
 ## applied to the parts
 
 ### `weights_multiplier <- samples * hidden.transposed()`
