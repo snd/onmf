@@ -152,5 +152,15 @@ the rows of `samples` encode the observed vectors.
 the rows of `hidden` encode the 
 
 **THIS: we can think of `weights_multiplier` as reinforcing those weights where the `hidden` variable
-vectors are correctly aligned with the observed data.
-weights are reinforced depending on how correctly the `hidden` variable vectors model the observed data.**
+vectors are correctly aligned with the observed `samples`.
+`weights` are reinforced depending on how correctly the `hidden` variable vectors model the `samples`.**
+
+### `hidden_multiplier <- weights.transpose() * samples`
+
+this is pretty much analogous to `weights_multiplier <- samples * hidden.transposed()`.
+
+again we make the shapes compatible.
+
+**we can think of `hidden_multiplier` as reinforcing those `hidden` where the `weights`
+are correctly aligned with the observed `samples`.
+`hidden` are reinforced depending on how correctly the `weights` model the samples`.**
