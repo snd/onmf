@@ -137,7 +137,7 @@ columns of `W` store coefficients for combining the rows of `H`
 
 `hidden.transposed().shape() = (nobserved, nhidden)`
 
-`weights_multiplier.shape() = weigths.shape() = (nsamples, nhidden)
+`weights_multiplier.shape() = weigths.shape() = (nsamples, nhidden)`
 
 **the transpose is only here so we can actually multiply `samples` with `hidden`**
 
@@ -155,12 +155,31 @@ the rows of `hidden` encode the
 vectors are correctly aligned with the observed `samples`.
 `weights` are reinforced depending on how correctly the `hidden` variable vectors model the `samples`.**
 
+on a poor match (modeling, alignment) `weights_multiplier` would become `< 1` and decrease
+the `weights`.
+
+this models a desirable property.
+
 ### `hidden_multiplier <- weights.transpose() * samples`
 
 this is pretty much analogous to `weights_multiplier <- samples * hidden.transposed()`.
 
-again we make the shapes compatible.
+again we transpose to make the shapes compatible.
 
 **we can think of `hidden_multiplier` as reinforcing those `hidden` where the `weights`
 are correctly aligned with the observed `samples`.
 `hidden` are reinforced depending on how correctly the `weights` model the samples`.**
+
+on a poor match (modeling, alignment) `hidden_multiplier` would become `< 1` and decrease
+the `hidden`.
+
+this models a desirable property.
+
+### `weights_divisor <- weights * hidden * hidden.transpose()`
+
+intuitively this does the opposite of the above.
+values `> 1` reduce the `weights` and values `< 1` increase the weights.
+
+so this has to model something we don't want.
+
+i suppose it has to do with orthogonalization.
