@@ -5,6 +5,11 @@ whose utility surpasses the confines of this crate.
 generic things that are also useful in other crates.
 */
 
+use ndarray::ArrayBase;
+
+pub type Dims = (usize, usize);
+pub type Array2D<T> = ArrayBase<Vec<T>, Dims>;
+
 mod repeatedly;
 pub use self::repeatedly::{Repeatedly, repeatedly};
 
