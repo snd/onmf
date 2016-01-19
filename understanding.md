@@ -163,11 +163,11 @@ this models a desirable property.
 
 ### `hidden_multiplier <- weights.transpose() * samples`
 
-here we take the dot product of the rows of `weights` and the `rows of samples`.
+here we take the dot product of the rows of `weights` and the rows of `samples`.
 along `nsamples`.
 
-output: how well (`> 1`) or poorly (`< 1`) do the `weights` model the `samples` for every
-combination of `nhidden` and `nobserved`.
+**output: how well (`> 1`) or poorly (`< 1`) do the `weights` model the `samples` for every
+combination of `nhidden` and `nobserved`.**
 
 `output.shape = (nhidden, nobserved)`
 
@@ -195,4 +195,18 @@ i suppose it has to do with orthogonalization.
 
 again we transpose to make the shapes compatible.
 
-`weights * hidden` reconstructs `samples`.
+`weights * hidden` reconstructs `samples` and is `(nsamples. nobserved)`
+
+`hidden * hidden.transpose()` is symetric and `(nhidden, nhidden)`
+
+`weights_divisor` is (nsamples, nhidden)`
+
+here we take the dot product of the rows of `reconstruction` (the observed of a sample) and the rows of `hidden` (the observed of a hidden)
+along `nobserved`.
+
+**`reconstruction * hidden.transpose()`: how well (`> 1`) or poorly (`< 1`) do the `hidden` model the `reconstruction` for every
+combination of `nhidden` and `nsamples`.**
+
+### `hidden_divisor <- weights.transpose() * weights * hidden + alpha * gamma * hidden`
+
+divisor the `+ alpha * gamma * hidden` part is responsible for the orthogonalization.
