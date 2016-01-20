@@ -1,5 +1,6 @@
 [package]
 authors = ["Maximilian Krüger <kruemaxi@gmail.com>"]
+build = "build.rs"
 description = ""
 documentation = "https://snd.github.io/onmf/onmf/index.html"
 homepage = "https://github.com/snd/onmf"
@@ -9,9 +10,9 @@ name = "onmf"
 readme = "README.md"
 repository = "https://github.com/snd/onmf.git"
 version = "0.1.0"
-build = "build.rs"
 
 [dependencies]
+clap = "1.5.5"
 image = "0.6.1"
 nalgebra = "0.4.0"
 num = "0.1.30"
@@ -20,5 +21,5 @@ rand = "0.3.12"
 rblas = "0.0.13"
 
 [dependencies.ndarray]
-version = "0.3.0"
 features = ["rblas"]
+version = "0.3.0"
