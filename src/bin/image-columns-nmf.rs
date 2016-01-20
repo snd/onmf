@@ -2,6 +2,8 @@ use std::path::Path;
 
 #[macro_use] extern crate clap;
 
+extern crate image;
+
 extern crate onmf;
 
 // `name` and `long` have the same lifetime
@@ -55,7 +57,9 @@ fn main() {
     println!("input_image_path.file_stem() = {:?}", input_image_path.file_stem());
     println!("input_image_path.extension() = {:?}", input_image_path.extension());
 
-    let mut input_image_file = std::fs::File::open(&input_image_path).unwrap();
+    // let mut input_image_file = std::fs::File::open(&input_image_path).unwrap();
+
+    let image = image::open(&input_image_path).unwrap();
 
     // TODO read the file into an array you can pass into nmf
 
