@@ -61,6 +61,9 @@ fn main() {
 
     let image = image::open(&input_image_path).unwrap();
 
+    // to grayscale
+    let image_luma = image.to_luma();
+
     // TODO read the file into an array you can pass into nmf
 
     // TODO 
