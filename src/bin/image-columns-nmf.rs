@@ -1,4 +1,8 @@
+use std::path::Path;
+
 #[macro_use] extern crate clap;
+
+extern crate onmf;
 
 // `name` and `long` have the same lifetime
 fn named_usize_arg<'n, 'h, 'g, 'p, 'r>(name: &'n str, help: &'h str) -> clap::Arg<'n, 'n, 'h, 'g, 'p, 'r> {
@@ -41,8 +45,27 @@ fn main() {
             .get_matches();
 
     let nhidden: usize = value_t!(matches.value_of("nhidden"), usize).unwrap_or(default_nhidden);
-    let input_image_path = matches.value_of("input-image-path").unwrap();
+    let input_image_path_string = matches.value_of("input-image-path").unwrap();
+    let input_image_path = Path::new(input_image_path_string);
 
     println!("nhidden = {}", nhidden);
-    println!("input_image_path = {}", input_image_path);
+    println!("input_image_path = {:?}", input_image_path);
+    println!("input_image_path.parent() = {:?}", input_image_path.parent());
+    println!("input_image_path.file_name() = {:?}", input_image_path.file_name());
+    println!("input_image_path.file_stem() = {:?}", input_image_path.file_stem());
+    println!("input_image_path.extension() = {:?}", input_image_path.extension());
+
+    // TODO make it possible to switch orthogonalization on and off
+
+    // TODO open file
+
+    // TODO error if file doesnt exist
+    //
+    // TODO read the file into an array you can pass into nmf
+
+    // TODO 
+    // let mut ortho_nmf = onmf::OrthogonalNMFBlas::new_random01(
+    //     nhidden, nobserved, nsamples);
+
+    // TODO iterate nmf
 }
