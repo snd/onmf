@@ -55,12 +55,8 @@ fn main() {
     println!("input_image_path.file_stem() = {:?}", input_image_path.file_stem());
     println!("input_image_path.extension() = {:?}", input_image_path.extension());
 
-    // TODO make it possible to switch orthogonalization on and off
+    let mut input_image_file = std::fs::File::open(&input_image_path).unwrap();
 
-    // TODO open file
-
-    // TODO error if file doesnt exist
-    //
     // TODO read the file into an array you can pass into nmf
 
     // TODO 
