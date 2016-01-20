@@ -4,6 +4,9 @@ use std::path::Path;
 
 extern crate image;
 
+extern crate rand;
+use rand::{StdRng, SeedableRng};
+
 extern crate onmf;
 use onmf::helpers::Array2D;
 
@@ -83,9 +86,11 @@ fn main() {
         samples[index] = (pixel[0] as f32) / 255.;
     }
 
-    // TODO 
-    // let mut ortho_nmf = onmf::OrthogonalNMFBlas::new_random01(
-    //     nhidden, nobserved, nsamples);
+    let seed: &[_] = &[1, 2, 3, 4];
+    let mut rng: StdRng = SeedableRng::from_seed(seed);
+
+    let mut ortho_nmf = onmf::OrthogonalNMFBlas::new_random01(
+        nhidden, nobserved, nsamples, &mut rng);
 
     // TODO iterate nmf
 }
