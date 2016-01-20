@@ -5,6 +5,7 @@ use std::path::Path;
 extern crate image;
 
 extern crate onmf;
+use onmf::helpers::Array2D;
 
 // `name` and `long` have the same lifetime
 fn named_usize_arg<'n, 'h, 'g, 'p, 'r>(name: &'n str, help: &'h str) -> clap::Arg<'n, 'n, 'h, 'g, 'p, 'r> {
@@ -64,7 +65,23 @@ fn main() {
     // to grayscale
     let image_luma = image.to_luma();
 
-    // TODO read the file into an array you can pass into nmf
+    println!("image_luma.dimensions() = {:?}", image_luma.dimensions());
+    let (width, height) = image_luma.dimensions();
+
+    let nobserved = height as usize;
+    let nsamples = width as usize;
+    println!("nobserved = {}", nobserved);
+    println!("nsamples = {}", nsamples);
+
+    // the indexing of image_array is reversed in respect to image_luma
+    let mut samples = Array2D::<f32>::zeros((nsamples, nobserved));
+
+    for (x, y, pixel) in image_luma.enumerate_pixels() {
+        let index = (x as usize, y as usize);
+
+        // convert from 0-255 to 0.-1.
+        samples[index] = (pixel[0] as f32) / 255.;
+    }
 
     // TODO 
     // let mut ortho_nmf = onmf::OrthogonalNMFBlas::new_random01(
