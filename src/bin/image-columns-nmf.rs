@@ -26,6 +26,8 @@ extern crate onmf;
 use onmf::helpers::Array2D;
 use onmf::helpers::{ToImage, Normalize, magnify};
 
+use onmf::helpers::PartialMaxIteratorExt;
+
 // `name` and `long` have the same lifetime
 fn named_usize_arg<'n, 'h, 'g, 'p, 'r>(name: &'n str, help: &'h str) -> clap::Arg<'n, 'n, 'h, 'g, 'p, 'r> {
     // we don't own `name` but we now own `error_message`
@@ -148,33 +150,35 @@ fn main() {
                 for ((row, col), val) in reconstruction.indexed_iter() {
                     image[(col, row + offset)] = val.clone();
                 }
+                let mut image = image.normalize();
 
                 let coeffs_offset_col = offset;
                 let coeffs_offset_row = nobserved + padding;
+                let max_coefficient = coefficients.iter().partial_max().unwrap();
                 for ((col, _), val) in coefficients.indexed_iter() {
                     for row in 0..thickness {
                         let index = (
                             row + coeffs_offset_row,
                             col + coeffs_offset_col
                         );
-                        image[index] = val.clone();
+                        image[index] = val / max_coefficient;
                     }
                 }
 
                 let base_offset_col = padding;
                 let base_offset_row = 0;
+                let max_base = base.iter().partial_max().unwrap();
                 for ((_, row), val) in base.indexed_iter() {
                     for col in 0..thickness {
                         let index = (
                             row + base_offset_row,
                             col + base_offset_col
                         );
-                        image[index] = val.clone();
+                        image[index] = val / max_base;
                     }
                 }
 
-                image.normalize()
-                    .save_to_png(&format!("image-unmix-{}.png", ihidden)[..]).unwrap();
+                image.save_to_png(&format!("image-unmix-{}.png", ihidden)[..]).unwrap();
             }
         }
 
