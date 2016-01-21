@@ -105,30 +105,34 @@ fn main() {
     let seed: &[_] = &[1, 2, 3, 4];
     let mut rng: StdRng = SeedableRng::from_seed(seed);
 
-    let mut ortho_nmf = onmf::OrthogonalNMFBlas::new_random01(
+    let mut nmf = onmf::NMFBlas::new_random01(
         nhidden, nobserved, nsamples, &mut rng);
 
-    let mut reconstruction = Array2D::<f32>::zeros(
-        ortho_nmf.samples_shape());
+    let mut reconstruction = Array2D::<f32>::zeros(nmf.samples_shape());
+
+    let thickness: usize = 20;
+    let padding: usize = 20;
+    let offset = padding * 2 + thickness;
 
     let mut iteration: i32 = 0;
     loop {
-        let alpha: f32 = 0.1 * 1.01.powi(iteration);
+        // let orthogonal: Option<f32> = Some(0.1 * 1.01.powi(iteration));
+        let orthogonal: Option<f32> = None;
 
-        ortho_nmf.iterate(alpha, &mut samples);
+        nmf.iterate(&mut samples, orthogonal);
 
         if iteration % 10 == 0 {
-            println!("iteration = {} alpha = {}", iteration, alpha);
+            println!("iteration = {:?} orthogonal = {:?}", iteration, orthogonal);
 
             // read testimage out of each row of nmf.hidden
             for ihidden in 0..nhidden {
                 let i = ihidden as isize;
                 let mut coefficients: Array2D<f32> =
-                    ortho_nmf.weights
+                    nmf.weights
                         .slice(&[S, Si(i, Some(i + 1), 1)])
                        .to_owned();
                 let mut base: Array2D<f32> =
-                    ortho_nmf.hidden
+                    nmf.hidden
                         .slice(&[Si(i, Some(i + 1), 1), S])
                         .to_owned();
                 Gemm::gemm(
@@ -139,10 +143,36 @@ fn main() {
                     &mut reconstruction.blas());
 
                 let mut image = DMat::<f32>::new_zeros(
-                    nobserved, nsamples);
+                    nobserved + offset,
+                    nsamples + offset);
                 for ((row, col), val) in reconstruction.indexed_iter() {
-                    image[(col, row)] = val.clone();
+                    image[(col, row + offset)] = val.clone();
                 }
+
+                let coeffs_offset_col = offset;
+                let coeffs_offset_row = nobserved + padding;
+                for ((col, _), val) in coefficients.indexed_iter() {
+                    for row in 0..thickness {
+                        let index = (
+                            row + coeffs_offset_row,
+                            col + coeffs_offset_col
+                        );
+                        image[index] = val.clone();
+                    }
+                }
+
+                let base_offset_col = padding;
+                let base_offset_row = 0;
+                for ((_, row), val) in base.indexed_iter() {
+                    for col in 0..thickness {
+                        let index = (
+                            row + base_offset_row,
+                            col + base_offset_col
+                        );
+                        image[index] = val.clone();
+                    }
+                }
+
                 image.normalize()
                     .save_to_png(&format!("image-unmix-{}.png", ihidden)[..]).unwrap();
             }
