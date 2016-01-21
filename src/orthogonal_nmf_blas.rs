@@ -24,6 +24,7 @@ impl<T> ShapeAsTuple<(usize, usize)> for ArrayBase<Vec<T>, (usize, usize)> {
     }
 }
 
+// TODO use helper::Array2D
 pub type Ix = (usize, usize);
 pub type MyMatrix = ArrayBase<Vec<FloatT>, Ix>;
 
