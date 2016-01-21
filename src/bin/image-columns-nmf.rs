@@ -1,14 +1,30 @@
 use std::path::Path;
 
-#[macro_use] extern crate clap;
+#[macro_use]
+extern crate clap;
+
+extern crate num;
+use num::{Float, Zero};
 
 extern crate image;
 
 extern crate rand;
 use rand::{StdRng, SeedableRng};
 
+extern crate rblas;
+use rblas::{Gemm, Matrix};
+use rblas::attribute::Transpose;
+
+extern crate ndarray;
+use ndarray::{Si, S};
+use ndarray::blas::{BlasArrayViewMut, AsBlas};
+
+extern crate nalgebra;
+use nalgebra::{DMat};
+
 extern crate onmf;
 use onmf::helpers::Array2D;
+use onmf::helpers::{ToImage, Normalize, magnify};
 
 // `name` and `long` have the same lifetime
 fn named_usize_arg<'n, 'h, 'g, 'p, 'r>(name: &'n str, help: &'h str) -> clap::Arg<'n, 'n, 'h, 'g, 'p, 'r> {
@@ -92,5 +108,46 @@ fn main() {
     let mut ortho_nmf = onmf::OrthogonalNMFBlas::new_random01(
         nhidden, nobserved, nsamples, &mut rng);
 
-    // TODO iterate nmf
+    let mut reconstruction = Array2D::<f32>::zeros(
+        ortho_nmf.samples_shape());
+
+    let mut iteration: i32 = 0;
+    loop {
+        let alpha: f32 = 0.1 * 1.01.powi(iteration);
+
+        ortho_nmf.iterate(alpha, &mut samples);
+
+        if iteration % 10 == 0 {
+            println!("iteration = {} alpha = {}", iteration, alpha);
+
+            // read testimage out of each row of nmf.hidden
+            for ihidden in 0..nhidden {
+                let i = ihidden as isize;
+                let mut coefficients: Array2D<f32> =
+                    ortho_nmf.weights
+                        .slice(&[S, Si(i, Some(i + 1), 1)])
+                       .to_owned();
+                let mut base: Array2D<f32> =
+                    ortho_nmf.hidden
+                        .slice(&[Si(i, Some(i + 1), 1), S])
+                        .to_owned();
+                Gemm::gemm(
+                    &1.,
+                    Transpose::NoTrans, &coefficients.blas(),
+                    Transpose::NoTrans, &base.blas(),
+                    &0.,
+                    &mut reconstruction.blas());
+
+                let mut image = DMat::<f32>::new_zeros(
+                    nobserved, nsamples);
+                for ((row, col), val) in reconstruction.indexed_iter() {
+                    image[(col, row)] = val.clone();
+                }
+                image.normalize()
+                    .save_to_png(&format!("image-unmix-{}.png", ihidden)[..]).unwrap();
+            }
+        }
+
+        iteration += 1;
+    }
 }
