@@ -41,8 +41,7 @@ fn main() {
         }
     }
 
-    // let mut ortho_nmf = onmf::OrthogonalNMF::<f64>::init_random01(
-    let mut ortho_nmf = onmf::OrthogonalNMFBlas::new_random01(
+    let mut nmf = onmf::NMFBlas::new_random01(
         nhidden, nobserved, nsamples, &mut rng);
 
     let mut iteration: i32 = 0;
@@ -56,7 +55,7 @@ fn main() {
         // this does not converge:
         // let alpha = 0.1 * 1.0001.powi(iteration);
 
-        ortho_nmf.iterate(alpha, &mut data);
+        nmf.iterate(&mut data, Some(alpha));
 
         if iteration % 10 == 0 {
             println!("iteration = {} alpha = {}", iteration, alpha);
@@ -65,7 +64,7 @@ fn main() {
             for irow in 0..nhidden {
                 let mut column = Vec::<FloatT>::new();
                 for icol in 0..nobserved {
-                    column.push(ortho_nmf.hidden[(irow, icol)]);
+                    column.push(nmf.hidden[(irow, icol)]);
                 }
                 let image = DMat::<FloatT>::from_col_vec(10, 10, &column[..]);
                 // println!("image {}", irow);
