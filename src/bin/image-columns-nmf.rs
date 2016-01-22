@@ -123,7 +123,7 @@ fn main() {
 
         nmf.iterate(&mut samples, orthogonal);
 
-        if iteration % 10 == 0 {
+        if iteration % 100 == 0 {
             println!("iteration = {:?} orthogonal = {:?}", iteration, orthogonal);
 
             // read testimage out of each row of nmf.hidden
