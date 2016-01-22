@@ -41,14 +41,14 @@ fn test_a_mul_a_transposed_is_symetric() {
     let b = a.clone().mul(a.transpose());
     println!("{:?}", b);
 
-    // is b symetric
+    // is a * a^T symetric (symetric = equal to transposed self)
     assert_approx_eq_ulps!(b, b.transpose(), 10);
 
     // c <- a^T * a
     let c = a.transpose().mul(a);
     println!("{:?}", c);
 
-    // is c symetric
+    // is a^T * a symetric (symetric = equal to transposed self)
     assert_approx_eq_ulps!(c, c.transpose(), 10);
 }
 

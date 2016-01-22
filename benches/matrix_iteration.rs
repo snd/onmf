@@ -13,12 +13,12 @@ const NHIDDEN: usize = 20;
 // column major:
 // stores one consecutive column after another.
 // row index varies most rapidly as one steps through consecutive memory.
-// iterate column in outer loop, row index in inner loop.
+// ITERATE COLUMN IN OUTER LOOP, ROW INDEX IN INNER LOOP.
 //
 // row major:
 // stores one consecutive row after another.
 // column index varies most rapidly as one steps through consecutive memory.
-// iterate row in outer loop, column index in inner loop.
+// ITERATE ROW IN OUTER LOOP, COLUMN INDEX IN INNER LOOP.
 
 // looping through contiguous memory locations
 // in the inner loop is much faster due to CPU caching.
