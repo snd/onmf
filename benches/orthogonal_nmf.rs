@@ -39,16 +39,27 @@ macro_rules! bench_ortho_nmf_blas {
         let seed: &[_] = &[1, 2, 3, 4];
         let mut rng: StdRng = SeedableRng::from_seed(seed);
 
-        let mut ortho_nmf = onmf::OrthogonalNMFBlas::new_random01(
+        let mut ortho_nmf = onmf::NMFBlas::new_random01(
             $nhidden, $nobserved, $nsamples, &mut rng);
 
         let mut samples = ArrayBase::<Vec<f32>, (usize, usize)>::from_elem(($nsamples, $nobserved), 1.);
 
-        let alpha: f32 = 0.1 * 1.01.powi(0);
+        // let alpha: Option<$float> = Some(0.1 * 1.01.powi(0));
+        let alpha: Option<f32> = None;
         $bencher.iter(|| {
-            ortho_nmf.iterate(alpha, &mut samples);
+            ortho_nmf.iterate(&mut samples, alpha);
         });
     }}
+}
+
+#[bench]
+fn bench_ortho_nmf_blas_4_32_5(bencher: &mut test::Bencher) {
+    bench_ortho_nmf_blas!(bencher, 4, 32, 5);
+}
+
+#[bench]
+fn bench_ortho_nmf_blas_4_32_7(bencher: &mut test::Bencher) {
+    bench_ortho_nmf_blas!(bencher, 4, 32, 7);
 }
 
 #[bench]
