@@ -16,8 +16,9 @@ use rblas::{Gemm, Matrix};
 use rblas::attribute::Transpose;
 
 extern crate ndarray;
+extern crate ndarray_rblas;
 use ndarray::{Si, S};
-use ndarray::blas::{BlasArrayViewMut, AsBlas};
+use ndarray_rblas::{BlasArrayViewMut, AsBlas};
 
 extern crate nalgebra;
 use nalgebra::{DMat};

@@ -6,6 +6,7 @@ extern crate rand;
 extern crate image;
 extern crate ndarray;
 extern crate rblas;
+extern crate ndarray_rblas;
 
 pub mod testimage_generator;
 
