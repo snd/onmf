@@ -7,7 +7,7 @@ use rblas::{Gemm, Matrix};
 use rblas::attribute::Transpose;
 
 use ndarray::{ArrayBase, DataOwned, DataMut};
-use ndarray::blas::{BlasArrayViewMut, AsBlas};
+use ndarray_rblas::{BlasArrayViewMut, AsBlas};
 
 use helpers::{random01, Dims, Array2D};
 

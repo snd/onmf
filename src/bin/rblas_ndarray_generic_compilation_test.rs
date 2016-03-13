@@ -8,9 +8,10 @@ use rblas::{Gemm};
 use rblas::matrix::Matrix;
 
 extern crate ndarray;
+extern crate ndarray_rblas;
 // this implements Matrix for BlasArrayViewMut
-use ndarray::blas::{AsBlas, BlasArrayViewMut};
-use ndarray::blas;
+use ndarray_rblas::{AsBlas, BlasArrayViewMut};
+use ndarray_rblas as blas;
 use ndarray::{ArrayBase, DataOwned, DataMut};
 
 fn multiply_f64(
